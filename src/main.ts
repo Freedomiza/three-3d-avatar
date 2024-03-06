@@ -37,7 +37,7 @@ document.addEventListener(
         bellyWaistToTopHip: 0.5,
         topHiptoHip: 0.5,
         hipToInsideLeg: 0.5,
-        insideLegToKnee: 1,
+        insideLegToKnee: 2,
         kneeHeight: 2,
         outerAnkleHeightR: 1,
         male: 1,

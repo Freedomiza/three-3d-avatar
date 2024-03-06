@@ -5,7 +5,7 @@ import {
   computeBoundsTree,
   MeshBVHHelper,
   disposeBoundsTree,
-  getBVHExtremes,
+  // getBVHExtremes,
   StaticGeometryGenerator,
   MeshBVH,
 } from "three-mesh-bvh";
@@ -192,24 +192,29 @@ export class ThreeJSHelper {
         // const skinTexture = loadTextures(isMale);
         // if (el.name !== "HipAttonation") {
         // this.drawBBox(el, this.scene);
-        this.scene.add(el);
+        // this.scene.add(el);
         const basePosition = this.getPosition(el);
         this.createLabel(`${el.name}`, basePosition, this.scene);
         // }
       });
 
-      this.scene.add(baseModel);
+      // result.scene.rotateY(-(Math.PI / 2.5));
+      // result.scene.rotateX(-(Math.PI / 2.5));
+      // result.scene.rotateZ(-(Math.PI / 2.5));
+      // result.scene.scale.set(3, 3, 3);
 
-      var wireframeMaterial = new THREE.MeshBasicMaterial({
+      this.scene.add(result.scene);
+
+      const wireframeMaterial = new THREE.MeshBasicMaterial({
         wireframe: true,
         transparent: true,
-        opacity: 0.05,
+        opacity: 0.5,
         depthWrite: false,
       });
 
       // prep the geometry
       this.staticGeometryGenerator = new StaticGeometryGenerator(
-        annotationModel[0]
+        annotationModel
         // baseModel
       );
       // this.originalMaterials = this.staticGeometryGenerator.getMaterials();
@@ -333,21 +338,24 @@ export class ThreeJSHelper {
       THREE.Object3DEventMap
     >
   ): THREE.Vector3 => {
-    let worldPosition = new THREE.Vector3();
+    const generator = new StaticGeometryGenerator(obj);
+    const geometry = generator.generate();
+    (geometry as any).computeBoundsTree();
 
-    const pos = obj.getWorldPosition(worldPosition);
+    const position = geometry.attributes.position;
+    const vector = new THREE.Vector3();
 
-    // var vector = (obj.geometry as any).boundsTree.closestPointToPoint(
-    //   new THREE.Vector3(),
-    //   {}
-    // );
+    vector.fromBufferAttribute(position, 0);
+
+    const globalVector = obj.localToWorld(vector);
+
     // var meshBVH = new MeshBVH(mesh);
     console.log({
-      // mesh: ,
-      // vector: vector,
+      vector: vector,
+      globalVector,
     });
 
-    return pos;
+    return globalVector;
   };
 
   createMaterials = (skins: THREE.Texture[]) => {
