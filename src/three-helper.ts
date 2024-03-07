@@ -5,9 +5,8 @@ import {
   computeBoundsTree,
   MeshBVHHelper,
   disposeBoundsTree,
-  // getBVHExtremes,
   StaticGeometryGenerator,
-  MeshBVH,
+  acceleratedRaycast,
 } from "three-mesh-bvh";
 
 import {
@@ -24,7 +23,7 @@ import femaleBody from "./assets/female-body.txt?raw";
 // Add the extension functions
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
-// THREE.Mesh.prototype.raycast = acceleratedRaycast;
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 export class ThreeJSHelper {
   renderer: THREE.WebGLRenderer;
@@ -40,42 +39,48 @@ export class ThreeJSHelper {
   // originalMaterials: any;
   staticGeometryGenerator?: StaticGeometryGenerator;
   bvhHelper?: MeshBVHHelper;
+  controls: OrbitControls;
 
   constructor(document: Document) {
-    // Setup render
     this.document = document;
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    // Setup render
+    this.renderer = this.setUpRenderer(this.document);
 
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(this.renderer.domElement);
+    // Set up scene
 
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xffffff);
-    const camera = new THREE.PerspectiveCamera(
+    this.scene = this.setUpScene();
+
+    // Set up camera
+    this.camera = this.setUpCamera();
+
+    // Set up label Renderer
+    this.labelRenderer = this.setupLabelRenderer(this.document);
+
+    // Setup controls
+    this.controls = this.setUpOrbitControl();
+
+    this.controls.addEventListener("change", this.render);
+  }
+  setUpScene = (): THREE.Scene => {
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xffffff);
+    return scene;
+  };
+  setUpRenderer = (document: Document): THREE.WebGLRenderer => {
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+    return renderer;
+  };
+  setUpCamera = () => {
+    return new THREE.PerspectiveCamera(
       45,
       window.innerWidth / window.innerHeight,
       0.1,
       20
     );
-    this.camera = camera;
-
-    this.labelRenderer = new CSS2DRenderer();
-    this.labelRenderer.setSize(window.innerWidth, window.innerHeight);
-    this.labelRenderer.domElement.style.position = "absolute";
-    this.labelRenderer.domElement.style.top = "0px";
-
-    document.body.appendChild(this.labelRenderer.domElement);
-
-    const controls = new OrbitControls(
-      this.camera,
-      this.labelRenderer.domElement
-    );
-
-    controls.minDistance = 1;
-    controls.maxDistance = 900;
-    controls.addEventListener("change", this.render);
-  }
+  };
   render = () => {
     this.renderer.render(this.scene, this.camera);
     this.labelRenderer.render(this.scene, this.camera);
@@ -143,12 +148,11 @@ export class ThreeJSHelper {
       //   console.log({ child });
       // });
 
-      const baseModel = result.scene.children.find(
+      this.bodyModel = result.scene.children.find(
         (el) => el.name === "body"
       ) as THREE.Mesh;
 
-      this.bodyModel = baseModel;
-      // updateMatrixWorld( true )
+      this.scene.updateMatrixWorld(true);
       this.bodyModel.visible = true;
       // bodyModel.rotateZ(-(Math.PI / 2.5));
 
@@ -169,7 +173,7 @@ export class ThreeJSHelper {
           this.applyMorph(el, initialMorphTargets);
         });
       }
-      console.log({ baseModel, annotationModel });
+      // console.log({ baseModel, annotationModel });
       //skin
       const skinTexture = this.loadTextures(isMale);
       skinTexture.mapping = THREE.UVMapping;
@@ -185,7 +189,7 @@ export class ThreeJSHelper {
       // const geometry = new BoxBufferGeometry(2, 2, 2);
       // const material = new MeshStandardMaterial({ color: 'purple' });
       // const cube = new Mesh(geometry, material);
-      baseModel.material = me0;
+      this.bodyModel.material = me0;
       // this.drawBBox(baseModel, this.scene, 0x00ff00);
 
       annotationModel.forEach((el) => {
@@ -276,6 +280,27 @@ export class ThreeJSHelper {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.labelRenderer.setSize(window.innerWidth, window.innerHeight);
   };
+
+  private setUpOrbitControl = () => {
+    const controls = new OrbitControls(
+      this.camera,
+      this.labelRenderer.domElement
+    );
+
+    controls.minDistance = 1;
+    controls.maxDistance = 900;
+    return controls;
+  };
+
+  private setupLabelRenderer(document: Document) {
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = "absolute";
+    labelRenderer.domElement.style.top = "0px";
+
+    document.body.appendChild(labelRenderer.domElement);
+    return labelRenderer;
+  }
 
   loadTextures(isMale: boolean) {
     if (isMale) {
