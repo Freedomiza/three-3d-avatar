@@ -27,7 +27,7 @@
     font-weight: bold;
     font-size: 14px;
   }
-  hr {
+  .line {
     display: inline-block;
     position: absolute;
     top: 50%;
@@ -40,7 +40,7 @@
   }
   &.annotation-left {
     text-align: left;
-    hr {
+    .line {
       display: inline-block;
       position: absolute;
       top: 50%;

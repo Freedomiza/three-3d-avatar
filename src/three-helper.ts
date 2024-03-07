@@ -18,7 +18,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { IModelTargetMapper, ModelTargetMapper } from "./models/model-mapper";
 import maleBody from "./assets/male-body.txt?raw";
 import femaleBody from "./assets/female-body.txt?raw";
-import annotationConfig from "./assets/annotation-config.json";
+
 import eyePNG from "./assets/eye.raw?raw";
 import { AnnotationModel } from "./models/annotation-model";
 import { LabelModel } from "./models/label-model";
@@ -28,6 +28,19 @@ import { createHTMLEyeBox, createHTMLLabel } from "./html-helper";
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
+
+const annotationConfig = [
+  {
+    name: "hip",
+    position: "right",
+    offset: -0.6,
+  },
+  {
+    name: "knee",
+    position: "right",
+    offset: -0.6,
+  },
+];
 
 export class ThreeJSHelper {
   renderer: THREE.WebGLRenderer;
