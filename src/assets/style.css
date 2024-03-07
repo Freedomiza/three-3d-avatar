@@ -1,28 +1,63 @@
-::root {
-  --gray: #14142B;
+:root {
+  --grey: #14142b;
+  --grey-light: #14142b32;
+  --grey-dark: #14142b64;
+  --secondary: #555580;
 }
 
 .annotation-label {
-  width: 32px;
-  height: 32px;
-  padding: 1em;
-  width: 100px;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: .5em;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  padding: 1em 0 1em 0;
+  width: 120px;
+  height: 50px;
+  color: var(--secondary);
+  background: transparent;
+  border-radius: 0.5em;
   font-size: 12px;
   line-height: 1.2;
-  transition: opacity .5s;
+  transition: opacity 0.5s;
   z-index: 3 !important;
-  /* margin-left: min(20%, 200px); */
+  padding-left: 0;
+  text-align: right;
 
-
+  .annotation-label-title {
+    font-weight: bold;
+    font-size: 14px;
+  }
+  hr {
+    display: inline-block;
+    position: absolute;
+    top: 50%;
+    right: 0;
+    border: 0;
+    border-top: 1px solid var(--grey-light);
+    width: calc(120px + 1em);
+    height: 1px;
+    margin: 0;
+  }
+  &.annotation-left {
+    text-align: left;
+    hr {
+      display: inline-block;
+      position: absolute;
+      top: 50%;
+      left: 0;
+      border: 0;
+      border-top: 1px solid var(--grey-light);
+      width: calc(120px + 1em);
+      height: 1px;
+      margin: 0;
+    }
+  }
 }
 
 .annotation-label-arrow {
-  width: 50px;
-  height: 1px;
-  border-top: 1px solid #14142b32;
-  margin-left: 10px;
-  z-index: 2;
+  width: 32px;
+  height: 32px;
+}
+.hidden {
+  display: none !important;
 }

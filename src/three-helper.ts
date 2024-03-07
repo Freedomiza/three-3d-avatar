@@ -15,16 +15,14 @@ import {
 } from "three/addons/renderers/CSS2DRenderer.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-
 import { IModelTargetMapper, ModelTargetMapper } from "./models/model-mapper";
 import maleBody from "./assets/male-body.txt?raw";
 import femaleBody from "./assets/female-body.txt?raw";
+import annotationConfig from "./assets/annotation-config.json";
 import eyePNG from "./assets/eye.raw?raw";
 import { AnnotationModel } from "./models/annotation-model";
 import { LabelModel } from "./models/label-model";
-import { LineMaterial } from "three/addons/lines/LineMaterial.js";
-import { LineGeometry } from "three/addons/lines/LineGeometry.js";
-import { Line2 } from "three/addons/lines/Line2.js";
+import { createHTMLEyeBox, createHTMLLabel } from "./html-helper";
 
 // Add the extension functions
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
@@ -66,7 +64,7 @@ export class ThreeJSHelper {
     this.labelRenderer = this.setupLabelRenderer(this.document);
 
     // Setup controls
-    this.controls = this.setUpOrbitControl();
+    this.controls = this.setUpOrbitControl(this.camera);
 
     this.controls.addEventListener("change", this.render);
     window.camera = this.camera;
@@ -99,7 +97,7 @@ export class ThreeJSHelper {
   };
   setUpCamera = () => {
     let camera = new THREE.PerspectiveCamera(
-      75,
+      55,
       window.innerWidth / window.innerHeight,
       0.1,
       20
@@ -150,7 +148,7 @@ export class ThreeJSHelper {
     const objData = JSON.stringify(modelData);
 
     const initialMorphTargets = new ModelTargetMapper(model).toArray();
-    this.camera.position.z = 10;
+    // this.camera.position.z = 10;
 
     // const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     // scene.add(ambientLight);
@@ -180,8 +178,6 @@ export class ThreeJSHelper {
       this.bodyModel = new BodyModel(
         result.scene.children.find((el) => el.name === "body") as THREE.Mesh
       );
-
-      // this.bodyModel.setVisible(true);
 
       this.scene.updateMatrixWorld(true);
 
@@ -214,7 +210,7 @@ export class ThreeJSHelper {
         const basePosition = this.getPosition(el.mesh);
         el.position = basePosition;
         el.label = this.createLabel(
-          `${el.title}`,
+          el,
           basePosition,
           this.scene,
           this.document
@@ -251,12 +247,11 @@ export class ThreeJSHelper {
 
       this.regenerateMesh();
 
-      this.camera.position.set(
-        -3.5425305708572274,
-        3.548924396760786,
-        0.3008065187372016
-      );
+      // this.camera.position.set(-3, 2.5, 0.25);
+
       this.camera.updateMatrixWorld();
+      const axesHelper = new THREE.AxesHelper(2);
+      this.scene.add(axesHelper);
 
       this.animate();
     };
@@ -302,14 +297,17 @@ export class ThreeJSHelper {
     this.labelRenderer.setSize(window.innerWidth, window.innerHeight);
   };
 
-  private setUpOrbitControl = () => {
-    const controls = new OrbitControls(
-      this.camera,
-      this.labelRenderer.domElement
-    );
+  private setUpOrbitControl = (camera: THREE.Camera) => {
+    const controls = new OrbitControls(camera, this.labelRenderer.domElement);
 
     controls.minDistance = 1;
     controls.maxDistance = 900;
+    camera.up.set(0, 1, 0);
+
+    camera.position.set(-4, 3, 0);
+
+    controls.update();
+
     return controls;
   };
 
@@ -332,23 +330,10 @@ export class ThreeJSHelper {
     }
 
     skinTexture.mapping = THREE.UVMapping;
-    skinTexture.flipY = false;
+    // skinTexture.flipY = false;
 
     return skinTexture;
   }
-
-  applyMorph = (
-    obj: THREE.Mesh<
-      THREE.BufferGeometry<THREE.NormalBufferAttributes>,
-      THREE.Material | THREE.Material[],
-      THREE.Object3DEventMap
-    >,
-    data: number[]
-  ): void => {
-    obj.morphTargetInfluences = data;
-    obj.geometry.computeBoundingBox();
-    obj.geometry.computeBoundingSphere();
-  };
 
   drawBBox(
     baseModel: THREE.Mesh<
@@ -368,13 +353,13 @@ export class ThreeJSHelper {
   }
 
   createLabel = (
-    label: string,
+    el: AnnotationModel,
     position: THREE.Vector3,
     scene: THREE.Scene,
     document: Document
   ): LabelModel => {
     const map = new THREE.TextureLoader().load(eyePNG);
-
+    const label = el.title ?? "";
     const spriteMaterial = new THREE.SpriteMaterial({
       map: map,
       alphaTest: 0.5,
@@ -390,29 +375,56 @@ export class ThreeJSHelper {
     scene.add(sprite);
 
     // // Create a CSS2D label
-    const labelDiv = document.createElement("div");
-    labelDiv.className = "annotation-label";
-    labelDiv.textContent = `${label}`;
-    labelDiv.addEventListener("pointerdown", (event) => {
-      console.log("clicked:" + label);
+
+    const foundConfig = annotationConfig.find((e) =>
+      label.toLowerCase().includes(e.name)
+    );
+    let offsetPosition = "right";
+    let offset = 0;
+    if (foundConfig) {
+      offsetPosition = foundConfig.position;
+      offset = foundConfig.offset;
+    }
+
+    const labelDiv = createHTMLLabel(document, {
+      title: label,
+      value: "43.3cm",
+      position: offsetPosition,
+      onPointerDown() {
+        console.log("clicked:" + label);
+      },
     });
 
     // Labeler
     let labelObject = new CSS2DObject(labelDiv);
     labelObject.position.copy(position);
+
+    // console.log({
+    //   viewport: this.labelRenderer!.getSize(),
+
+    //   centerPos: labelObject.center,
+    // });
     // x +/-= 1m
-    labelObject.center.x += -1;
+
+    labelObject.center.x += offset;
+
+    // debugger;
     scene.add(labelObject);
 
     // Start point
-    const startDiv = document.createElement("div");
-    startDiv.className = "annotation-label-arrow";
+    const startDiv = createHTMLEyeBox(document, () => {
+      if (el.label?.label.element.classList.contains("hidden")) {
+        el.label?.label.element.classList.remove("hidden");
+        return;
+      }
+      el.label?.label.element.classList.add("hidden");
+    });
     // startDiv.textContent = "";
 
     // Draw start point
     let startObject = new CSS2DObject(startDiv);
     startObject.position.copy(position);
-    startObject.center.x += -0.5;
+
     scene.add(startObject);
 
     return new LabelModel(labelObject, sprite);

@@ -1,0 +1,12 @@
+[
+  {
+    "name": "hip",
+    "position": "right",
+    "offset": -0.6
+  },
+  {
+    "name": "knee",
+    "position": "right",
+    "offset": -0.6
+  }
+]
