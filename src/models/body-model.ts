@@ -1,12 +1,8 @@
 import * as THREE from "three";
+import { BaseModel } from "./base-model";
 
-export default class BodyModel extends THREE.Mesh {
+export default class BodyModel extends BaseModel {
   declare morphTargetDictionary?: BodyMeasurementIndices;
-
-  // Constructor
-  constructor(geometry: THREE.BufferGeometry, material: THREE.Material) {
-    super(geometry, material);
-  }
 }
 
 enum MeasurementKeys {

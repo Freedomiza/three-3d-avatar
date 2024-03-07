@@ -1,0 +1,28 @@
+::root {
+  --gray: #14142B;
+}
+
+.annotation-label {
+  width: 32px;
+  height: 32px;
+  padding: 1em;
+  width: 100px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: .5em;
+  font-size: 12px;
+  line-height: 1.2;
+  transition: opacity .5s;
+  z-index: 3 !important;
+  /* margin-left: min(20%, 200px); */
+
+
+}
+
+.annotation-label-arrow {
+  width: 50px;
+  height: 1px;
+  border-top: 1px solid #14142b32;
+  margin-left: 10px;
+  z-index: 2;
+}

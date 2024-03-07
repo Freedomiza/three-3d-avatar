@@ -19,6 +19,12 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { IModelTargetMapper, ModelTargetMapper } from "./models/model-mapper";
 import maleBody from "./assets/male-body.txt?raw";
 import femaleBody from "./assets/female-body.txt?raw";
+import eyePNG from "./assets/eye.raw?raw";
+import { AnnotationModel } from "./models/annotation-model";
+import { LabelModel } from "./models/label-model";
+import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+import { LineGeometry } from "three/addons/lines/LineGeometry.js";
+import { Line2 } from "three/addons/lines/Line2.js";
 
 // Add the extension functions
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
@@ -31,15 +37,17 @@ export class ThreeJSHelper {
   camera: THREE.PerspectiveCamera;
 
   bodyModel?: BodyModel;
+
   labelRenderer: CSS2DRenderer;
   labelObject?: CSS2DObject;
   document: Document;
 
   meshHelper?: THREE.Mesh;
-  // originalMaterials: any;
+  originalMaterials: any;
   staticGeometryGenerator?: StaticGeometryGenerator;
   bvhHelper?: MeshBVHHelper;
   controls: OrbitControls;
+  annotationModels: AnnotationModel[] = [];
 
   constructor(document: Document) {
     this.document = document;
@@ -52,6 +60,7 @@ export class ThreeJSHelper {
 
     // Set up camera
     this.camera = this.setUpCamera();
+    this.scene.add(this.camera);
 
     // Set up label Renderer
     this.labelRenderer = this.setupLabelRenderer(this.document);
@@ -60,12 +69,27 @@ export class ThreeJSHelper {
     this.controls = this.setUpOrbitControl();
 
     this.controls.addEventListener("change", this.render);
+    window.camera = this.camera;
   }
+
   setUpScene = (): THREE.Scene => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
     return scene;
   };
+
+  generateAnnotations: (mesh: THREE.Mesh[]) => AnnotationModel[] = (
+    mesh: THREE.Mesh[]
+  ) => {
+    const result: AnnotationModel[] = [];
+    mesh.forEach((el) => {
+      const annotation = new AnnotationModel(el);
+      result.push(annotation);
+    });
+
+    return result;
+  };
+
   setUpRenderer = (document: Document): THREE.WebGLRenderer => {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -74,24 +98,47 @@ export class ThreeJSHelper {
     return renderer;
   };
   setUpCamera = () => {
-    return new THREE.PerspectiveCamera(
-      45,
+    let camera = new THREE.PerspectiveCamera(
+      75,
       window.innerWidth / window.innerHeight,
       0.1,
       20
     );
+
+    return camera;
   };
   render = () => {
     this.renderer.render(this.scene, this.camera);
     this.labelRenderer.render(this.scene, this.camera);
+    this.updateAnnotationOpacity();
   };
 
+  // Update all eye annotation which is behind and which is in front of the camera
+  updateAnnotationOpacity = () => {
+    const meshDistance = this.camera.position.distanceTo(
+      this.bodyModel!.mesh!.position
+    );
+
+    this.annotationModels.forEach((el) => {
+      const pos = this.getPosition(el.mesh);
+      const spriteDistance = this.camera.position.distanceTo(pos);
+      var spriteBehindObject = spriteDistance > meshDistance;
+      el.label!.sprite!.material.opacity = spriteBehindObject ? 0.5 : 1;
+      el.label!.label.element.style.opacity = spriteBehindObject ? "0.5" : "1";
+    });
+
+    // spriteBehindObject = spriteDistance > meshDistance;
+    // sprite.material.opacity = spriteBehindObject ? 0.25 : 1;
+    // // Do you want a number that changes size according to its position?
+    // // Comment out the following line and the `::before` pseudo-element.
+    // sprite.material.opacity = 0;
+  };
   updateMorphTargets = (values: any) => {
     // for (let i = 0; i < values.length; i++) {
     //   bodyModel.morphTargetInfluences[ i ] = values[i];
     // }
     if (this.bodyModel) {
-      this.bodyModel!.morphTargetInfluences = values;
+      this.bodyModel.applyMorph(values);
     }
   };
 
@@ -130,82 +177,49 @@ export class ThreeJSHelper {
     loader.setDRACOLoader(dracoLoader);
 
     const onLoad = (result: GLTF) => {
-      // result.scene.traverse((child) => {
-      //   if (child.material) {
-      //     child.material.metalness = 0.4;
-      //     child.material.roughness = 0.7;
-      //   }
-      //   // console.log(child.material);
-      // });
-      // console.log({
-      //   result,
-      //   scene: result.scene,
-      //   sceneChildren: result.scene.children,
-      //   length: result.scene.children.length,
-      // });
+      this.bodyModel = new BodyModel(
+        result.scene.children.find((el) => el.name === "body") as THREE.Mesh
+      );
 
-      // result.scene.children.forEach((child) => {
-      //   console.log({ child });
-      // });
-
-      this.bodyModel = result.scene.children.find(
-        (el) => el.name === "body"
-      ) as THREE.Mesh;
+      // this.bodyModel.setVisible(true);
 
       this.scene.updateMatrixWorld(true);
-      this.bodyModel.visible = true;
-      // bodyModel.rotateZ(-(Math.PI / 2.5));
 
-      // console.log(baseModel);
-      // console.log(baseModel.morphTargetDictionary);
-
-      // baseModel.scale.set(3, 3, 3);
-      // baseModel.translateZ(2.2);
-
-      const annotationModel = result.scene.children.filter(
+      const models = result.scene.children.filter(
         (child) => child.name !== "body"
       ) as THREE.Mesh[];
 
-      if (initialMorphTargets) {
-        this.applyMorph(this.bodyModel, initialMorphTargets);
+      this.annotationModels = this.generateAnnotations(models);
 
-        annotationModel.forEach((el) => {
-          this.applyMorph(el, initialMorphTargets);
+      if (initialMorphTargets) {
+        this.bodyModel.applyMorph(initialMorphTargets);
+        this.annotationModels.forEach((el) => {
+          el.applyMorph(initialMorphTargets);
         });
       }
-      // console.log({ baseModel, annotationModel });
+
       //skin
       const skinTexture = this.loadTextures(isMale);
-      skinTexture.mapping = THREE.UVMapping;
-      skinTexture.flipY = false;
 
       const me0 = new THREE.MeshStandardMaterial({
         map: skinTexture,
         wireframe: true,
+        emissive: new THREE.Color(0xffffff),
+        emissiveMap: skinTexture,
       });
 
-      me0.emissive = new THREE.Color(0xffffff);
-      me0.emissiveMap = skinTexture;
-      // const geometry = new BoxBufferGeometry(2, 2, 2);
-      // const material = new MeshStandardMaterial({ color: 'purple' });
-      // const cube = new Mesh(geometry, material);
-      this.bodyModel.material = me0;
-      // this.drawBBox(baseModel, this.scene, 0x00ff00);
+      this.bodyModel.applySkinTexture(me0);
 
-      annotationModel.forEach((el) => {
-        // const skinTexture = loadTextures(isMale);
-        // if (el.name !== "HipAttonation") {
-        // this.drawBBox(el, this.scene);
-        // this.scene.add(el);
-        const basePosition = this.getPosition(el);
-        this.createLabel(`${el.name}`, basePosition, this.scene);
-        // }
+      this.annotationModels.forEach((el) => {
+        const basePosition = this.getPosition(el.mesh);
+        el.position = basePosition;
+        el.label = this.createLabel(
+          `${el.title}`,
+          basePosition,
+          this.scene,
+          this.document
+        );
       });
-
-      // result.scene.rotateY(-(Math.PI / 2.5));
-      // result.scene.rotateX(-(Math.PI / 2.5));
-      // result.scene.rotateZ(-(Math.PI / 2.5));
-      // result.scene.scale.set(3, 3, 3);
 
       this.scene.add(result.scene);
 
@@ -216,11 +230,9 @@ export class ThreeJSHelper {
         depthWrite: false,
       });
 
-      // prep the geometry
-      this.staticGeometryGenerator = new StaticGeometryGenerator(
-        annotationModel
-        // baseModel
-      );
+      // // prep the geometry
+      this.staticGeometryGenerator = new StaticGeometryGenerator(models);
+      // baseModel
       // this.originalMaterials = this.staticGeometryGenerator.getMaterials();
 
       this.meshHelper = new THREE.Mesh(
@@ -238,6 +250,14 @@ export class ThreeJSHelper {
       this.scene.updateMatrixWorld(true);
 
       this.regenerateMesh();
+
+      this.camera.position.set(
+        -3.5425305708572274,
+        3.548924396760786,
+        0.3008065187372016
+      );
+      this.camera.updateMatrixWorld();
+
       this.animate();
     };
 
@@ -270,6 +290,7 @@ export class ThreeJSHelper {
 
   animate = () => {
     requestAnimationFrame(this.animate);
+    this.controls.update();
     this.render();
   };
   onWindowResize = () => {
@@ -303,11 +324,17 @@ export class ThreeJSHelper {
   }
 
   loadTextures(isMale: boolean) {
+    let skinTexture: THREE.Texture;
     if (isMale) {
-      return new THREE.TextureLoader().load(maleBody);
+      skinTexture = new THREE.TextureLoader().load(maleBody);
+    } else {
+      skinTexture = new THREE.TextureLoader().load(femaleBody);
     }
 
-    return new THREE.TextureLoader().load(femaleBody);
+    skinTexture.mapping = THREE.UVMapping;
+    skinTexture.flipY = false;
+
+    return skinTexture;
   }
 
   applyMorph = (
@@ -343,17 +370,52 @@ export class ThreeJSHelper {
   createLabel = (
     label: string,
     position: THREE.Vector3,
-    scene: THREE.Scene
-  ) => {
-    // Create a CSS2D label
-    const labelDiv = this.document.createElement("div");
+    scene: THREE.Scene,
+    document: Document
+  ): LabelModel => {
+    const map = new THREE.TextureLoader().load(eyePNG);
+
+    const spriteMaterial = new THREE.SpriteMaterial({
+      map: map,
+      alphaTest: 0.5,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+    });
+
+    const sprite = new THREE.Sprite(spriteMaterial);
+    sprite.position.set(position.x, position.y, position.z);
+    sprite.scale.set(0.1, 0.1, 0.1);
+
+    scene.add(sprite);
+
+    // // Create a CSS2D label
+    const labelDiv = document.createElement("div");
     labelDiv.className = "annotation-label";
-    labelDiv.textContent = label;
+    labelDiv.textContent = `${label}`;
+    labelDiv.addEventListener("pointerdown", (event) => {
+      console.log("clicked:" + label);
+    });
 
-    var labelObject = new CSS2DObject(labelDiv);
-    labelObject.position.copy(position); // Position slightly above the sphere
-
+    // Labeler
+    let labelObject = new CSS2DObject(labelDiv);
+    labelObject.position.copy(position);
+    // x +/-= 1m
+    labelObject.center.x += -1;
     scene.add(labelObject);
+
+    // Start point
+    const startDiv = document.createElement("div");
+    startDiv.className = "annotation-label-arrow";
+    // startDiv.textContent = "";
+
+    // Draw start point
+    let startObject = new CSS2DObject(startDiv);
+    startObject.position.copy(position);
+    startObject.center.x += -0.5;
+    scene.add(startObject);
+
+    return new LabelModel(labelObject, sprite);
   };
 
   getPosition = (
@@ -375,10 +437,10 @@ export class ThreeJSHelper {
     const globalVector = obj.localToWorld(vector);
 
     // var meshBVH = new MeshBVH(mesh);
-    console.log({
-      vector: vector,
-      globalVector,
-    });
+    // console.log({
+    //   vector: vector,
+    //   globalVector,
+    // });
 
     return globalVector;
   };

@@ -4,13 +4,15 @@ declare module "*?raw" {
 }
 
 // If in a module:
-module THREE {
-  export interface BufferGeometry {
-    computeBoundsTree(): void;
-    disposeBoundsTree(): void;
-  }
+// declare module "three" {
+//   module THREE {
+//     export interface BufferGeometry extends THREE.BufferGeometry {
+//       computeBoundsTree(): void;
+//       disposeBoundsTree(): void;
+//     }
 
-  export interface Mesh {
-    raycast(...args: any[]): THREE.Intersection[]; // Adjust argument types if needed
-  }
-}
+//     export interface Mesh extends THREE.Mesh {
+//       raycast(...args: any[]): THREE.Intersection[]; // Adjust argument types if needed
+//     }
+//   }
+// }
