@@ -1,6 +1,6 @@
 import modelData from "./assets/body-annotation-2.json" assert { type: "json" };
 
-import { ThreeJSHelper } from "./three-helper.ts";
+import { ThreeJSHelper } from "./three-helper";
 const threeHelper = new ThreeJSHelper(document);
 import "./assets/style.scss"; // will be injected into the page
 

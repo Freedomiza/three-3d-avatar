@@ -8,6 +8,7 @@ import {
   StaticGeometryGenerator,
   acceleratedRaycast,
 } from "three-mesh-bvh";
+import { gsap } from "gsap"; // Or another tweening library
 
 import {
   CSS2DRenderer,
@@ -28,17 +29,42 @@ import { createHTMLEyeBox, createHTMLLabel } from "./html-helper";
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
+const DEFAULT_EYE_SCALE = 0.1;
+const INITIAL_CAMERA_POSITION = {
+  x: -3.8201812341515238,
+  y: 2.9254623718186523,
+  z: 1.2787836167269795,
+};
 
+const INITIAL_CAMERA_TARGET = {
+  x: 0.8869577950508424,
+  y: -0.3999143144837351,
+  z: -0.2310290260325576,
+};
 const annotationConfig = [
   {
     name: "hip",
     position: "right",
     offset: -0.6,
+    camera: {
+      position: {
+        x: -0.8796421447974158,
+        y: 1.4382300241048787,
+        z: 0.5797832250551551,
+      },
+    },
   },
   {
     name: "knee",
     position: "right",
     offset: -0.6,
+    camera: {
+      position: {
+        x: -1.0205184377905128,
+        y: 0.9692504083661506,
+        z: 0.6240398525831068,
+      },
+    },
   },
 ];
 
@@ -60,6 +86,8 @@ export class ThreeJSHelper {
   controls: OrbitControls;
   annotationModels: AnnotationModel[] = [];
 
+  eyeScale: number = DEFAULT_EYE_SCALE;
+
   constructor(document: Document) {
     this.document = document;
     // Setup render
@@ -79,10 +107,22 @@ export class ThreeJSHelper {
     // Setup controls
     this.controls = this.setUpOrbitControl(this.camera);
 
-    this.controls.addEventListener("change", this.render);
+    this.controls.addEventListener("change", this.onControlChanged);
     window.camera = this.camera;
   }
 
+  onControlChanged = () => {
+    console.log({
+      direction: this.camera.getWorldDirection(new THREE.Vector3()),
+      position: this.camera.getWorldPosition(new THREE.Vector3()),
+      zoom: this.camera.zoom,
+    });
+
+    // console.log(this.camera.position);
+    // console.log(this.camera.zoom);
+
+    this.render();
+  };
   setUpScene = (): THREE.Scene => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
@@ -108,6 +148,7 @@ export class ThreeJSHelper {
     document.body.appendChild(renderer.domElement);
     return renderer;
   };
+
   setUpCamera = () => {
     let camera = new THREE.PerspectiveCamera(
       55,
@@ -118,6 +159,31 @@ export class ThreeJSHelper {
 
     return camera;
   };
+  moveCamera(position: THREE.Vector3, target: THREE.Vector3) {
+    const controls = this.controls;
+
+    // Animate the camera
+    gsap.to(this.camera.position, {
+      duration: 1, // Animation duration in seconds
+      x: position.x,
+      y: position.y,
+      z: position.z,
+      onUpdate: () => {
+        // controls.update(); // Important: Update OrbitControls
+      },
+    });
+
+    // Animate the camera
+    gsap.to(controls.target, {
+      duration: 1, // Animation duration in seconds
+      x: target.x,
+      y: target.y,
+      z: target.z,
+      onUpdate: () => {
+        controls.update(); // Important: Update OrbitControls
+      },
+    });
+  }
   render = () => {
     this.renderer.render(this.scene, this.camera);
     this.labelRenderer.render(this.scene, this.camera);
@@ -131,11 +197,14 @@ export class ThreeJSHelper {
     );
 
     this.annotationModels.forEach((el) => {
-      const pos = this.getPosition(el.mesh);
+      const pos = el.position!;
       const spriteDistance = this.camera.position.distanceTo(pos);
       var spriteBehindObject = spriteDistance > meshDistance;
       el.label!.sprite!.material.opacity = spriteBehindObject ? 0.5 : 1;
       el.label!.label.element.style.opacity = spriteBehindObject ? "0.5" : "1";
+
+      this.eyeScale = DEFAULT_EYE_SCALE * spriteDistance * 0.5;
+      el.label?.sprite.scale.set(this.eyeScale, this.eyeScale, this.eyeScale);
     });
 
     // spriteBehindObject = spriteDistance > meshDistance;
@@ -317,7 +386,16 @@ export class ThreeJSHelper {
     controls.maxDistance = 900;
     camera.up.set(0, 1, 0);
 
-    camera.position.set(-4, 3, 0);
+    camera.position.set(
+      INITIAL_CAMERA_POSITION.x,
+      INITIAL_CAMERA_POSITION.y,
+      INITIAL_CAMERA_POSITION.z
+    );
+    controls.target.set(
+      INITIAL_CAMERA_TARGET.x,
+      INITIAL_CAMERA_TARGET.y,
+      INITIAL_CAMERA_TARGET.z
+    );
 
     controls.update();
 
@@ -371,6 +449,7 @@ export class ThreeJSHelper {
     scene: THREE.Scene,
     document: Document
   ): LabelModel => {
+    //eyePNG scale is 513x469 ~ 512p
     const map = new THREE.TextureLoader().load(eyePNG);
     const label = el.title ?? "";
     const spriteMaterial = new THREE.SpriteMaterial({
@@ -383,7 +462,7 @@ export class ThreeJSHelper {
 
     const sprite = new THREE.Sprite(spriteMaterial);
     sprite.position.set(position.x, position.y, position.z);
-    sprite.scale.set(0.1, 0.1, 0.1);
+    sprite.scale.set(this.eyeScale, this.eyeScale, this.eyeScale);
 
     scene.add(sprite);
 
@@ -426,11 +505,22 @@ export class ThreeJSHelper {
 
     // Start point
     const startDiv = createHTMLEyeBox(document, () => {
-      if (el.label?.label.element.classList.contains("hidden")) {
-        el.label?.label.element.classList.remove("hidden");
-        return;
-      }
-      el.label?.label.element.classList.add("hidden");
+      //Rotate camera
+      this.moveCamera(
+        new THREE.Vector3(
+          foundConfig?.camera.position.x,
+          foundConfig?.camera.position.y,
+          foundConfig?.camera.position.z
+        ),
+        new THREE.Vector3(position.x, position.y, position.z)
+      );
+      // console.log(el.label?.label.element.classList)
+      // TODO: jus a demo test,
+      // if (el.label?.label.element.classList.contains("hidden")) {
+      //   el.label?.label.element.classList.remove("hidden");
+      //   return;
+      // }
+      // el.label?.label.element.classList.add("hidden");
     });
     // startDiv.textContent = "";
 
