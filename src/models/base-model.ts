@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { StaticGeometryGenerator } from "three-mesh-bvh";
 
 export class BaseModel {
   mesh: THREE.Mesh<
@@ -20,7 +21,6 @@ export class BaseModel {
     >
   ) {
     this.mesh = mesh;
-    // this.position = this._calculatePosition(mesh);
     this.rotation = mesh.rotation;
     this.scale = mesh.scale;
     this.title = mesh.name;
@@ -39,5 +39,20 @@ export class BaseModel {
 
   applySkinTexture = (mat: THREE.Material | THREE.Material[]): void => {
     this.mesh.material = mat;
+  };
+
+  calculatePosition = (): THREE.Vector3 => {
+    const generator = new StaticGeometryGenerator(this.mesh);
+    const geometry = generator.generate();
+    (geometry as any).computeBoundsTree();
+
+    const position = geometry.attributes.position;
+    const vector = new THREE.Vector3();
+
+    vector.fromBufferAttribute(position, 0);
+    const globalVector = this.mesh.localToWorld(vector);
+
+    this.position = globalVector;
+    return globalVector;
   };
 }

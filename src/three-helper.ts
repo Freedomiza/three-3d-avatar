@@ -8,7 +8,7 @@ import {
   StaticGeometryGenerator,
   acceleratedRaycast,
 } from "three-mesh-bvh";
-import { gsap } from "gsap"; // Or another tweening library
+import { gsap } from "gsap";
 
 import {
   CSS2DRenderer,
@@ -17,56 +17,29 @@ import {
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { IModelTargetMapper, ModelTargetMapper } from "./models/model-mapper";
-import maleBody from "./assets/male-body.txt?raw";
-import femaleBody from "./assets/female-body.txt?raw";
 
 import eyePNG from "./assets/eye.raw?raw";
 import { AnnotationModel } from "./models/annotation-model";
 import { LabelModel } from "./models/label-model";
 import { createHTMLEyeBox, createHTMLLabel } from "./html-helper";
+import annotationConfig from "./assets/annotation-config.json";
 
 // Add the extension functions
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
-const DEFAULT_EYE_SCALE = 0.1;
-const INITIAL_CAMERA_POSITION = {
-  x: -3.8201812341515238,
-  y: 2.9254623718186523,
-  z: 1.2787836167269795,
-};
+declare global {
+  interface Window {
+    camera: THREE.Camera;
+  }
+}
 
-const INITIAL_CAMERA_TARGET = {
-  x: 0.8869577950508424,
-  y: -0.3999143144837351,
-  z: -0.2310290260325576,
-};
-const annotationConfig = [
-  {
-    name: "hip",
-    position: "right",
-    offset: -0.6,
-    camera: {
-      position: {
-        x: -0.8796421447974158,
-        y: 1.4382300241048787,
-        z: 0.5797832250551551,
-      },
-    },
-  },
-  {
-    name: "knee",
-    position: "right",
-    offset: -0.6,
-    camera: {
-      position: {
-        x: -1.0205184377905128,
-        y: 0.9692504083661506,
-        z: 0.6240398525831068,
-      },
-    },
-  },
-];
+import {
+  DEFAULT_EYE_SCALE,
+  INITIAL_CAMERA_POSITION,
+  INITIAL_CAMERA_TARGET,
+} from "./config";
+import { TranslationLabel } from "./models/translation-label";
 
 export class ThreeJSHelper {
   renderer: THREE.WebGLRenderer;
@@ -92,9 +65,7 @@ export class ThreeJSHelper {
     this.document = document;
     // Setup render
     this.renderer = this.setUpRenderer(this.document);
-
     // Set up scene
-
     this.scene = this.setUpScene();
 
     // Set up camera
@@ -103,7 +74,6 @@ export class ThreeJSHelper {
 
     // Set up label Renderer
     this.labelRenderer = this.setupLabelRenderer(this.document);
-
     // Setup controls
     this.controls = this.setUpOrbitControl(this.camera);
 
@@ -111,12 +81,15 @@ export class ThreeJSHelper {
     window.camera = this.camera;
   }
 
+  ensureInit = async () => {};
+
   onControlChanged = () => {
-    console.log({
-      direction: this.camera.getWorldDirection(new THREE.Vector3()),
-      position: this.camera.getWorldPosition(new THREE.Vector3()),
-      zoom: this.camera.zoom,
-    });
+    // TODO: add more controller here if possible
+    // console.log({
+    //   direction: this.camera.getWorldDirection(new THREE.Vector3()),
+    //   position: this.camera.getWorldPosition(new THREE.Vector3()),
+    //   zoom: this.camera.zoom,
+    // });
 
     // console.log(this.camera.position);
     // console.log(this.camera.zoom);
@@ -159,6 +132,7 @@ export class ThreeJSHelper {
 
     return camera;
   };
+
   moveCamera(position: THREE.Vector3, target: THREE.Vector3) {
     const controls = this.controls;
 
@@ -184,6 +158,30 @@ export class ThreeJSHelper {
       },
     });
   }
+
+  findAnnotationConfig = (annotation: AnnotationModel) => {
+    const label = annotation.title ?? "";
+
+    const foundConfig = annotationConfig.find((e) =>
+      label.toLowerCase().includes(e.name)
+    );
+    return foundConfig;
+  };
+
+  zoomToAnnotation = (label: string) => {
+    const foundAnnotation = this.findAnnotationByName(label);
+    if (!foundAnnotation) return;
+
+    const foundConfig = this.findAnnotationConfig(foundAnnotation);
+
+    if (foundConfig) {
+      const position = foundAnnotation!.position!;
+      const camera = foundConfig.camera.position;
+      const cameraPos = new THREE.Vector3(camera.x, camera.y, camera.z);
+      this.moveCamera(cameraPos, position);
+    }
+  };
+
   render = () => {
     this.renderer.render(this.scene, this.camera);
     this.labelRenderer.render(this.scene, this.camera);
@@ -213,132 +211,119 @@ export class ThreeJSHelper {
     // // Comment out the following line and the `::before` pseudo-element.
     // sprite.material.opacity = 0;
   };
-  updateMorphTargets = (values: any) => {
-    // for (let i = 0; i < values.length; i++) {
-    //   bodyModel.morphTargetInfluences[ i ] = values[i];
-    // }
-    if (this.bodyModel) {
+  updateMorphTargets = (params: IModelTargetMapper) => {
+    const values = new ModelTargetMapper(params).toArray();
+    if (this.bodyModel && values) {
       this.bodyModel.applyMorph(values);
+      this.annotationModels.forEach((el) => {
+        el.applyMorph(values);
+      });
     }
+  };
+
+  filterBodyModelFromList = (
+    list: THREE.Object3D<THREE.Object3DEventMap>[]
+  ) => {
+    return new BodyModel(list.find((el) => el.name === "body") as THREE.Mesh);
+  };
+
+  filterAnnotationFromList = (
+    list: THREE.Object3D<THREE.Object3DEventMap>[]
+  ) => {
+    const models = list.filter(
+      (child) => child.name !== "body"
+    ) as THREE.Mesh[];
+    return models;
   };
 
   loadModel = (
     isMale: boolean,
-    model: IModelTargetMapper,
-    modelData: unknown
+    params: IModelTargetMapper,
+    modelData: string,
+    callback?: () => void,
+    onError: (error: any) => void = () => {}
   ) => {
-    const objData = JSON.stringify(modelData);
+    try {
+      const objData = modelData;
 
-    const initialMorphTargets = new ModelTargetMapper(model).toArray();
-    // this.camera.position.z = 10;
+      //dracoLoader loader
+      const dracoLoader = new DRACOLoader();
+      dracoLoader.setDecoderPath(
+        "https://unpkg.com/three@0.154.x/examples/jsm/libs/draco/gltf/"
+      ); // use a full url path
 
-    // const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    // scene.add(ambientLight);
+      const loader = new GLTFLoader();
+      loader.setDRACOLoader(dracoLoader);
 
-    // const frontLight = new THREE.DirectionalLight(0xeeeeee, 1.5);
-    // frontLight.position.set(150, 150 , 50);
-    // scene.add(frontLight);
+      const onLoad = (result: GLTF) => {
+        this.bodyModel = this.filterBodyModelFromList(result.scene.children);
 
-    // const rightFrontLight = new THREE.DirectionalLight(0xeeeeee, 0.5);
-    // rightFrontLight.position.set(0, 150 , 0);
-    // scene.add(rightFrontLight);
+        const models = this.filterAnnotationFromList(result.scene.children);
 
-    // const backLight = new THREE.DirectionalLight(0xdddddd, 2);
-    // backLight.position.set(-150, 150, -50);
-    // scene.add(backLight);
+        this.annotationModels = this.generateAnnotations(models);
 
-    //dracoLoader loader
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath(
-      "https://unpkg.com/three@0.154.x/examples/jsm/libs/draco/gltf/"
-    ); // use a full url path
+        this.updateMorphTargets(params);
 
-    const loader = new GLTFLoader();
-    loader.setDRACOLoader(dracoLoader);
+        //skin
+        const mat = this.bodyModel.loadTextures(isMale);
+        this.bodyModel.applySkinTexture(mat);
 
-    const onLoad = (result: GLTF) => {
-      this.bodyModel = new BodyModel(
-        result.scene.children.find((el) => el.name === "body") as THREE.Mesh
-      );
-
-      this.scene.updateMatrixWorld(true);
-
-      const models = result.scene.children.filter(
-        (child) => child.name !== "body"
-      ) as THREE.Mesh[];
-
-      this.annotationModels = this.generateAnnotations(models);
-
-      if (initialMorphTargets) {
-        this.bodyModel.applyMorph(initialMorphTargets);
         this.annotationModels.forEach((el) => {
-          el.applyMorph(initialMorphTargets);
+          // el.position = this.getPosition(el.mesh);
+          el.calculatePosition();
+          el.label = this.createLabel(
+            el,
+            el.position!,
+            this.scene,
+            this.document
+          );
         });
-      }
 
-      //skin
-      const skinTexture = this.loadTextures(isMale);
+        this.scene.add(result.scene);
 
-      const me0 = new THREE.MeshStandardMaterial({
-        map: skinTexture,
-        wireframe: true,
-        emissive: new THREE.Color(0xffffff),
-        emissiveMap: skinTexture,
-      });
+        const wireframeMaterial = new THREE.MeshBasicMaterial({
+          wireframe: false,
+          transparent: true,
+          opacity: 0.5,
+          depthWrite: false,
+          // visible: false,
+        });
 
-      this.bodyModel.applySkinTexture(me0);
+        // // prep the geometry
+        this.staticGeometryGenerator = new StaticGeometryGenerator(models);
+        // this.originalMaterials = this.staticGeometryGenerator.getMaterials();
 
-      this.annotationModels.forEach((el) => {
-        const basePosition = this.getPosition(el.mesh);
-        el.position = basePosition;
-        el.label = this.createLabel(
-          el,
-          basePosition,
-          this.scene,
-          this.document
+        this.meshHelper = new THREE.Mesh(
+          new THREE.BufferGeometry(),
+          wireframeMaterial
         );
-      });
 
-      this.scene.add(result.scene);
+        this.meshHelper.receiveShadow = false;
 
-      const wireframeMaterial = new THREE.MeshBasicMaterial({
-        wireframe: true,
-        transparent: true,
-        opacity: 0.5,
-        depthWrite: false,
-      });
+        this.scene.add(this.meshHelper);
 
-      // // prep the geometry
-      this.staticGeometryGenerator = new StaticGeometryGenerator(models);
-      // baseModel
-      // this.originalMaterials = this.staticGeometryGenerator.getMaterials();
+        this.bvhHelper = new MeshBVHHelper(this.meshHelper, 10);
 
-      this.meshHelper = new THREE.Mesh(
-        new THREE.BufferGeometry(),
-        wireframeMaterial
-      );
+        this.scene.add(this.bvhHelper);
+        this.scene.updateMatrixWorld(true);
 
-      this.meshHelper.receiveShadow = true;
+        this.regenerateMesh();
 
-      this.scene.add(this.meshHelper);
+        // this.camera.position.set(-3, 2.5, 0.25);
 
-      this.bvhHelper = new MeshBVHHelper(this.meshHelper, 10);
+        this.camera.updateMatrixWorld();
+        // const axesHelper = new THREE.AxesHelper(2);
+        // this.scene.add(axesHelper);
 
-      this.scene.add(this.bvhHelper);
-      this.scene.updateMatrixWorld(true);
+        this.animate();
 
-      this.regenerateMesh();
+        callback && callback();
+      };
 
-      // this.camera.position.set(-3, 2.5, 0.25);
-
-      this.camera.updateMatrixWorld();
-      const axesHelper = new THREE.AxesHelper(2);
-      this.scene.add(axesHelper);
-
-      this.animate();
-    };
-
-    loader.parse(objData, "", onLoad);
+      loader.parse(objData, "", onLoad);
+    } catch (err) {
+      onError && onError(err);
+    }
   };
 
   regenerateMesh = () => {
@@ -370,6 +355,7 @@ export class ThreeJSHelper {
     this.controls.update();
     this.render();
   };
+
   onWindowResize = () => {
     this.camera.aspect = window.innerWidth / window.innerHeight;
 
@@ -412,19 +398,19 @@ export class ThreeJSHelper {
     return labelRenderer;
   }
 
-  loadTextures(isMale: boolean) {
-    let skinTexture: THREE.Texture;
-    if (isMale) {
-      skinTexture = new THREE.TextureLoader().load(maleBody);
-    } else {
-      skinTexture = new THREE.TextureLoader().load(femaleBody);
-    }
+  // loadTextures(isMale: boolean) {
+  //   let skinTexture: THREE.Texture;
+  //   if (isMale) {
+  //     skinTexture = new THREE.TextureLoader().load(maleBody);
+  //   } else {
+  //     skinTexture = new THREE.TextureLoader().load(femaleBody);
+  //   }
 
-    skinTexture.mapping = THREE.UVMapping;
-    // skinTexture.flipY = false;
+  //   skinTexture.mapping = THREE.UVMapping;
+  //   // skinTexture.flipY = false;
 
-    return skinTexture;
-  }
+  //   return skinTexture;
+  // }
 
   drawBBox(
     baseModel: THREE.Mesh<
@@ -468,9 +454,8 @@ export class ThreeJSHelper {
 
     // // Create a CSS2D label
 
-    const foundConfig = annotationConfig.find((e) =>
-      label.toLowerCase().includes(e.name)
-    );
+    const foundConfig = this.findAnnotationConfig(el);
+
     let offsetPosition = "right";
     let offset = 0;
     if (foundConfig) {
@@ -482,8 +467,15 @@ export class ThreeJSHelper {
       title: label,
       value: "43.3cm",
       position: offsetPosition,
-      onPointerDown() {
-        console.log("clicked:" + label);
+      onPointerDown: () => {
+        this.moveCamera(
+          new THREE.Vector3(
+            foundConfig?.camera.position.x,
+            foundConfig?.camera.position.y,
+            foundConfig?.camera.position.z
+          ),
+          new THREE.Vector3(position.x, position.y, position.z)
+        );
       },
     });
 
@@ -533,47 +525,128 @@ export class ThreeJSHelper {
     return new LabelModel(labelObject, sprite);
   };
 
-  getPosition = (
-    obj: THREE.Mesh<
-      THREE.BufferGeometry<THREE.NormalBufferAttributes>,
-      THREE.Material | THREE.Material[],
-      THREE.Object3DEventMap
-    >
-  ): THREE.Vector3 => {
-    const generator = new StaticGeometryGenerator(obj);
-    const geometry = generator.generate();
-    (geometry as any).computeBoundsTree();
+  // getPosition = (
+  //   obj: THREE.Mesh<
+  //     THREE.BufferGeometry<THREE.NormalBufferAttributes>,
+  //     THREE.Material | THREE.Material[],
+  //     THREE.Object3DEventMap
+  //   >
+  // ): THREE.Vector3 => {
+  //   const generator = new StaticGeometryGenerator(obj);
+  //   const geometry = generator.generate();
+  //   (geometry as any).computeBoundsTree();
 
-    const position = geometry.attributes.position;
-    const vector = new THREE.Vector3();
+  //   const position = geometry.attributes.position;
+  //   const vector = new THREE.Vector3();
 
-    vector.fromBufferAttribute(position, 0);
+  //   vector.fromBufferAttribute(position, 0);
 
-    const globalVector = obj.localToWorld(vector);
+  //   const globalVector = obj.localToWorld(vector);
 
-    // var meshBVH = new MeshBVH(mesh);
-    // console.log({
-    //   vector: vector,
-    //   globalVector,
-    // });
+  //   // var meshBVH = new MeshBVH(mesh);
+  //   // console.log({
+  //   //   vector: vector,
+  //   //   globalVector,
+  //   // });
 
-    return globalVector;
+  //   return globalVector;
+  // };
+
+  // createMaterials = (skins: THREE.Texture[]) => {
+  //   var materials = [];
+
+  //   for (var i = 0; i < skins.length; i++) {
+  //     materials[i] = new THREE.MeshLambertMaterial({
+  //       color: 0xeeeeee,
+  //       // specular: 10.0,
+  //       map: skins[i],
+  //       // skinning: false,
+  //       // morphTargets: true,
+  //       // wrapAround: true,
+  //     });
+  //   }
+
+  //   return materials;
+  // };
+
+  hideAllLabels = () => {
+    this.annotationModels.forEach((el) => {
+      el.hideLabel();
+    });
+  };
+  showAllLabels: () => void = () => {
+    this.annotationModels.forEach((el) => {
+      el.showLabel();
+    });
+  };
+  resetView: () => void = () => {
+    this.moveCamera(
+      new THREE.Vector3(
+        INITIAL_CAMERA_POSITION.x,
+        INITIAL_CAMERA_POSITION.y,
+        INITIAL_CAMERA_POSITION.z
+      ),
+      new THREE.Vector3(
+        INITIAL_CAMERA_TARGET.x,
+        INITIAL_CAMERA_TARGET.y,
+        INITIAL_CAMERA_TARGET.z
+      )
+    );
+  };
+  showWireFrame = () => {
+    this.bodyModel?.toggleWireFrame(true);
+  };
+  hideWireFrame = () => {
+    this.bodyModel?.toggleWireFrame(false);
+  };
+  findAnnotationByName = (name: string) => {
+    return this.annotationModels.find((el) =>
+      el.title?.toLowerCase().includes(name.toLowerCase())
+    );
   };
 
-  createMaterials = (skins: THREE.Texture[]) => {
-    var materials = [];
-
-    for (var i = 0; i < skins.length; i++) {
-      materials[i] = new THREE.MeshLambertMaterial({
-        color: 0xeeeeee,
-        // specular: 10.0,
-        map: skins[i],
-        // skinning: false,
-        // morphTargets: true,
-        // wrapAround: true,
-      });
+  hideLabel = (annotation: string) => {
+    const foundAnnotation = this.findAnnotationByName(annotation);
+    if (foundAnnotation) {
+      foundAnnotation.hideLabel();
     }
+  };
 
-    return materials;
+  showLabel = (annotation: string) => {
+    const foundAnnotation = this.findAnnotationByName(annotation);
+    if (foundAnnotation) {
+      foundAnnotation.showLabel();
+    }
+  };
+
+  hideEye = (annotation: string) => {
+    const foundAnnotation = this.findAnnotationByName(annotation);
+    if (foundAnnotation) {
+      foundAnnotation.hideEye();
+    }
+  };
+
+  showEye = (annotation: string) => {
+    const foundAnnotation = this.findAnnotationByName(annotation);
+    if (foundAnnotation) {
+      foundAnnotation.showEye();
+    }
+  };
+
+  showAllEyes = () => {
+    this.annotationModels.forEach((el) => {
+      el.showEye();
+    });
+  };
+  hideAllEyes = () => {
+    this.annotationModels.forEach((el) => {
+      el.hideEye();
+    });
+  };
+
+  updateLabelContent = (annotation: string, data: TranslationLabel) => {
+    const foundAnnotation = this.findAnnotationByName(annotation);
+
+    foundAnnotation?.updateLabelContent(data);
   };
 }

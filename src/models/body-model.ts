@@ -1,8 +1,37 @@
 import * as THREE from "three";
 import { BaseModel } from "./base-model";
+import maleBody from "../assets/male-body.txt?raw";
+import femaleBody from "../assets/female-body.txt?raw";
 
 export default class BodyModel extends BaseModel {
   declare morphTargetDictionary?: BodyMeasurementIndices;
+
+  toggleWireFrame = (value: boolean) => {
+    if (this.mesh?.material) {
+      (this.mesh?.material as THREE.MeshStandardMaterial).wireframe = value;
+      (this.mesh.material as THREE.MeshStandardMaterial).needsUpdate = true;
+    }
+  };
+
+  loadTextures = (isMale: boolean): THREE.MeshStandardMaterial => {
+    let skinTexture: THREE.Texture;
+    if (isMale) {
+      skinTexture = new THREE.TextureLoader().load(maleBody);
+    } else {
+      skinTexture = new THREE.TextureLoader().load(femaleBody);
+    }
+
+    skinTexture.mapping = THREE.UVMapping;
+    // skinTexture.flipY = false;
+    const me0 = new THREE.MeshStandardMaterial({
+      map: skinTexture,
+      // wireframe: true,
+      emissive: new THREE.Color(0xffffff),
+      emissiveMap: skinTexture,
+    });
+
+    return me0;
+  };
 }
 
 enum MeasurementKeys {

@@ -1,3 +1,5 @@
+import { TranslationLabel } from "./models/translation-label";
+
 export const createHTMLLabel = (
   document: Document,
   {
@@ -38,6 +40,20 @@ export const createHTMLEyeBox = (
   return element;
 };
 
-// export const moveCamera = (euler, zoom) {
-
-// }
+export const updateHTMLLabel = (
+  element: HTMLElement,
+  data: TranslationLabel
+) => {
+  if (data.label) {
+    const title = element.querySelector(".annotation-label-title");
+    if (title) {
+      title.textContent = data.label;
+    }
+  }
+  if (data.value) {
+    const value = element.querySelector(".annotation-label-value");
+    if (value) {
+      value.textContent = data.value;
+    }
+  }
+};

@@ -1,12 +1,37 @@
-import modelData from "./assets/body-annotation-2.json" assert { type: "json" };
-
+import modelData from "./assets/body-annotation.json?raw";
+import * as THREE from "three";
+import "./assets/style.scss";
+import { IModelTargetMapper } from "./models/model-mapper";
+import { TranslationLabel } from "./models/translation-label";
 import { ThreeJSHelper } from "./three-helper";
-const threeHelper = new ThreeJSHelper(document);
-import "./assets/style.scss"; // will be injected into the page
 
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
+const threeHelper = new ThreeJSHelper(document);
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await threeHelper.ensureInit();
+  const onLoadModelCompeted = () => {
+    if (window.flutter_inappwebview) {
+      window.flutter_inappwebview.callHandler("onModelLoaded");
+    }
+  };
+  const onLoadModelError = (error: Error) => {
+    if (window.flutter_inappwebview) {
+      window.flutter_inappwebview.callHandler("onModelError", error);
+    }
+  };
+
+  window.addEventListener("resize", threeHelper.onWindowResize);
+
+  window.loadModel = (isMale: boolean, params: IModelTargetMapper) => {
+    threeHelper.loadModel(
+      isMale,
+      params,
+      modelData,
+      onLoadModelCompeted,
+      onLoadModelError
+    );
+  };
+  const loadDummyModel = () => {
     threeHelper.loadModel(
       true,
       {
@@ -47,15 +72,87 @@ document.addEventListener(
         waistIndicatorDisable: 0,
         acrossBackShoulderWidthIndicatorDisable: 0,
       },
-      modelData
+      modelData,
+      onLoadModelCompeted,
+      onLoadModelError
     );
-    window.addEventListener("resize", threeHelper.onWindowResize);
+  };
+
+  if (window.flutter_inappwebview) {
+    window.flutter_inappwebview.callHandler("onReady");
   }
-  // [
-  //   0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
-  //   0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1,
-  //   0.5, 1, 0,
-  //   // Optional render dot
-  //   0, 0, 0,
-  // ]
-);
+
+  if (window.FlutterChannelReady) {
+    window.FlutterChannelReady.postMessage("Hello from JavaScript!");
+  }
+
+  loadDummyModel();
+
+  window.loadDummyModel = loadDummyModel;
+
+  window.updateMorphTargets = threeHelper.updateMorphTargets;
+
+  window.hideAllLabels = threeHelper.hideAllLabels;
+
+  window.showAllLabels = threeHelper.showAllLabels;
+
+  window.resetView = window.resetView;
+
+  window.showWireFrame = threeHelper.showWireFrame;
+  window.hideWireFrame = threeHelper.hideWireFrame;
+  window.moveCamera = (pos: IPosition, target: IPosition) => {
+    threeHelper.moveCamera(
+      new THREE.Vector3(pos.x, pos.y, pos.z),
+      new THREE.Vector3(target.x, target.y, target.z)
+    );
+  };
+  window.zoomToAnnotation = threeHelper.zoomToAnnotation;
+
+  window.hideLabel = threeHelper.hideLabel;
+
+  window.showLabel = threeHelper.showLabel;
+
+  window.hideEye = threeHelper.hideEye;
+
+  window.showEye = threeHelper.showEye;
+
+  window.hideAllEyes = threeHelper.hideAllEyes;
+
+  window.showAllEyes = threeHelper.showAllEyes;
+
+  window.updateLabelContent = threeHelper.updateLabelContent;
+});
+
+declare global {
+  interface IPosition {
+    x: number;
+    y: number;
+    z: number;
+  }
+  interface Window {
+    flutter_inappwebview: any;
+    loadModel: (isMale: boolean, params: IModelTargetMapper) => void;
+    loadDummyModel: () => void;
+    FlutterChannelReady: any;
+    updateMorphTargets: (params: IModelTargetMapper) => void;
+
+    resetView: () => void;
+    showWireFrame: () => void;
+    hideWireFrame: () => void;
+    moveCamera: (pos: IPosition, target: IPosition) => void;
+    zoomToAnnotation: (annotation: string) => void;
+
+    hideAllLabels: () => void;
+    showAllLabels: () => void;
+    hideLabel: (annotation: string) => void;
+    showLabel: (annotation: string) => void;
+
+    hideAllEyes: () => void;
+    showAllEyes: () => void;
+
+    hideEye: (annotation: string) => void;
+    showEye: (annotation: string) => void;
+
+    updateLabelContent: (annotation: string, data: TranslationLabel) => void;
+  }
+}
