@@ -2,6 +2,7 @@ import modelData from "./assets/body-annotation-2.json" assert { type: "json" };
 
 import { ThreeJSHelper } from "./three-helper.ts";
 const threeHelper = new ThreeJSHelper(document);
+import "./assets/style.scss"; // will be injected into the page
 
 document.addEventListener(
   "DOMContentLoaded",
@@ -37,8 +38,8 @@ document.addEventListener(
         bellyWaistToTopHip: 0.5,
         topHiptoHip: 0.5,
         hipToInsideLeg: 0.5,
-        insideLegToKnee: 2,
-        kneeHeight: 2,
+        insideLegToKnee: 1,
+        kneeHeight: 1,
         outerAnkleHeightR: 1,
         male: 1,
         female: 0,
