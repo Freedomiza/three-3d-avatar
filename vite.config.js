@@ -13,14 +13,23 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        additionalData: `
+        additionalData: `          
+        
           @font-face {
             font-family: 'Inter'; 
-            src: url(${fonts.inter}) format('woff2'); 
+            src: url(${fonts.interRegular}) format('woff2'); 
             font-weight: 400; 
             font-style: normal; 
             font-display: swap;
           }
+
+          @font-face {
+              font-family: 'Inter';
+              src: url(${fonts.interBold}) format('woff2');
+              font-weight: bold;
+              font-style: normal;
+              font-display: swap;
+          }          
         `,
       },
     },

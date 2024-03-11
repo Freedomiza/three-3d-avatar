@@ -1,12 +1,13 @@
-body {
-  font-family: "Inter", sans-serif;
-}
-
 :root {
   --grey: #14142b;
   --grey-light: #14142b32;
   --grey-dark: #14142b64;
   --secondary: #555580;
+  --fontSize: 12px;
+}
+body {
+  font-family: "Inter", sans-serif;
+  font-size: var(--fontSize);
 }
 
 .annotation-label {
@@ -28,8 +29,12 @@ body {
   text-align: right;
 
   .annotation-label-title {
+    font-weight: normal;
+    font-size: var(--fontSize);
+  }
+  .annotation-label-value {
+    font-size: var(--fontSize);
     font-weight: bold;
-    font-size: 14px;
   }
   .line {
     display: inline-block;
