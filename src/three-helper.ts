@@ -312,8 +312,8 @@ export class ThreeJSHelper {
         // this.camera.position.set(-3, 2.5, 0.25);
 
         this.camera.updateMatrixWorld();
-        // const axesHelper = new THREE.AxesHelper(2);
-        // this.scene.add(axesHelper);
+        const axesHelper = new THREE.AxesHelper(2);
+        this.scene.add(axesHelper);
 
         this.animate();
 
@@ -368,8 +368,11 @@ export class ThreeJSHelper {
   private setUpOrbitControl = (camera: THREE.Camera) => {
     const controls = new OrbitControls(camera, this.labelRenderer.domElement);
 
-    controls.minDistance = 1;
-    controls.maxDistance = 900;
+    // controls.minDistance = 1;
+    // controls.maxDistance = 90;
+    controls.minPolarAngle = -Math.PI / 2;
+    controls.maxPolarAngle = Math.PI / 2;
+
     camera.up.set(0, 1, 0);
 
     camera.position.set(
@@ -377,6 +380,7 @@ export class ThreeJSHelper {
       INITIAL_CAMERA_POSITION.y,
       INITIAL_CAMERA_POSITION.z
     );
+
     controls.target.set(
       INITIAL_CAMERA_TARGET.x,
       INITIAL_CAMERA_TARGET.y,
@@ -648,5 +652,13 @@ export class ThreeJSHelper {
     const foundAnnotation = this.findAnnotationByName(annotation);
 
     foundAnnotation?.updateLabelContent(data);
+  };
+
+  unlockCamera: () => void = () => {
+    this.controls.enabled = true;
+  };
+
+  lockCamera: () => void = () => {
+    this.controls.enabled = false;
   };
 }

@@ -7,7 +7,7 @@ export const INITIAL_CAMERA_POSITION = {
 };
 
 export const INITIAL_CAMERA_TARGET = {
-  x: 0.9987885783432117,
-  y: -0.03226810733449097,
-  z: 0.03715030309696021,
+  x: 0,
+  y: 0.5,
+  z: 0,
 };

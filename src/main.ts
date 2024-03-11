@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   window.showAllLabels = threeHelper.showAllLabels;
 
-  window.resetView = window.resetView;
+  window.resetView = threeHelper.resetView;
 
   window.showWireFrame = threeHelper.showWireFrame;
   window.hideWireFrame = threeHelper.hideWireFrame;
@@ -121,6 +121,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.showAllEyes = threeHelper.showAllEyes;
 
   window.updateLabelContent = threeHelper.updateLabelContent;
+
+  window.lockCamera = threeHelper.lockCamera;
+
+  window.unlockCamera = threeHelper.unlockCamera;
 });
 
 declare global {
@@ -154,5 +158,9 @@ declare global {
     showEye: (annotation: string) => void;
 
     updateLabelContent: (annotation: string, data: TranslationLabel) => void;
+
+    lockCamera: () => void;
+
+    unlockCamera: () => void;
   }
 }
