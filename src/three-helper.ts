@@ -1,28 +1,28 @@
-import * as THREE from "three";
-import BodyModel from "./models/body-model";
-import { GLTF, GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import {
-  computeBoundsTree,
-  MeshBVHHelper,
-  disposeBoundsTree,
-  StaticGeometryGenerator,
-  acceleratedRaycast,
-} from "three-mesh-bvh";
 import { gsap } from "gsap";
 
+import * as THREE from "three";
 import {
-  CSS2DRenderer,
-  CSS2DObject,
-} from "three/addons/renderers/CSS2DRenderer.js";
-import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+  MeshBVHHelper,
+  StaticGeometryGenerator,
+  acceleratedRaycast,
+  computeBoundsTree,
+  disposeBoundsTree,
+} from "three-mesh-bvh";
+import { GLTF, GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import BodyModel from "./models/body-model";
+
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+import {
+  CSS2DObject,
+  CSS2DRenderer,
+} from "three/addons/renderers/CSS2DRenderer.js";
 import { IModelTargetMapper, ModelTargetMapper } from "./models/model-mapper";
 
-// import eyePNG from "./assets/eye.raw?raw";
+import annotationConfig from "./assets/annotation-config.json";
+import { createHTMLEyeBox, createHTMLLabel } from "./html-helper";
 import { AnnotationModel } from "./models/annotation-model";
 import { LabelModel } from "./models/label-model";
-import { createHTMLEyeBox, createHTMLLabel } from "./html-helper";
-import annotationConfig from "./assets/annotation-config.json";
 
 // Add the extension functions
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
@@ -35,7 +35,6 @@ declare global {
 }
 
 import {
-  DEFAULT_EYE_SCALE,
   INITIAL_CAMERA_POSITION,
   INITIAL_CAMERA_ROTATION_LOCK,
   INITIAL_CAMERA_TARGET,
@@ -59,8 +58,6 @@ export class ThreeJSHelper {
   bvhHelper?: MeshBVHHelper;
   controls: OrbitControls;
   annotationModels: AnnotationModel[] = [];
-
-  eyeScale: number = DEFAULT_EYE_SCALE;
 
   private _bodyHeight: number = INITIAL_CAMERA_TARGET.y;
   get bodyHeight() {
@@ -95,17 +92,25 @@ export class ThreeJSHelper {
 
   ensureInit = async () => {};
 
+  getCenterTarget = () => {
+    return new THREE.Vector3(0, this.bodyHeight / 2, 0);
+  };
   onControlChanged = () => {
     // TODO: add more controller here if possible
-    // console.log({
-    //   direction: this.camera.getWorldDirection(new THREE.Vector3()),
-    //   position: this.camera.getWorldPosition(new THREE.Vector3()),
-    //   zoom: this.camera.zoom,
-    // });
+
+    const meshDistance = this.camera.position.distanceTo(
+      this.getCenterTarget()
+    );
+
+    if (meshDistance < 2.5) {
+      this.hideAllLabels();
+    } else {
+      this.showAllLabels();
+    }
 
     // console.log(this.camera.position);
     // console.log(this.camera.zoom);
-
+    this.updateAnnotationOpacity();
     this.render();
   };
   setUpScene = (): THREE.Scene => {
@@ -198,29 +203,32 @@ export class ThreeJSHelper {
   render = () => {
     this.renderer.render(this.scene, this.camera);
     this.labelRenderer.render(this.scene, this.camera);
-    // this.updateAnnotationOpacity();
   };
 
   // Update all eye annotation which is behind and which is in front of the camera
-  // updateAnnotationOpacity = () => {
-  // const meshDistance = this.camera.position.distanceTo(
-  //   this.bodyModel!.mesh!.position
-  // );
-  // this.annotationModels.forEach((el) => {
-  //   const pos = el.position!;
-  //   const spriteDistance = this.camera.position.distanceTo(pos);
-  //   var spriteBehindObject = spriteDistance > meshDistance;
-  //   // el.label!.sprite!.material.opacity = spriteBehindObject ? 0.5 : 1;
-  //   el.label!.label.element.style.opacity = spriteBehindObject ? "0.5" : "1";
-  //   // this.eyeScale = DEFAULT_EYE_SCALE * spriteDistance * 0.35;
-  //   // el.label?.sprite.scale.set(this.eyeScale, this.eyeScale, this.eyeScale);
-  // });
-  // spriteBehindObject = spriteDistance > meshDistance;
-  // sprite.material.opacity = spriteBehindObject ? 0.25 : 1;
-  // // Do you want a number that changes size according to its position?
-  // // Comment out the following line and the `::before` pseudo-element.
-  // sprite.material.opacity = 0;
-  // };
+  updateAnnotationOpacity = () => {
+    this.annotationModels.forEach((el) => {
+      el.label?.updatePosition();
+    });
+
+    // const meshDistance = this.camera.position.distanceTo(
+    //   this.bodyModel!.mesh!.position
+    // );
+    // this.annotationModels.forEach((el) => {
+    //   const pos = el.position!;
+    //   const spriteDistance = this.camera.position.distanceTo(pos);
+    //   var spriteBehindObject = spriteDistance > meshDistance;
+    //   // el.label!.sprite!.material.opacity = spriteBehindObject ? 0.5 : 1;
+    //   el.label!.label.element.style.opacity = spriteBehindObject ? "0.5" : "1";
+    //   // this.eyeScale = DEFAULT_EYE_SCALE * spriteDistance * 0.35;
+    //   // el.label?.sprite.scale.set(this.eyeScale, this.eyeScale, this.eyeScale);
+    // });
+    // spriteBehindObject = spriteDistance > meshDistance;
+    // sprite.material.opacity = spriteBehindObject ? 0.25 : 1;
+    // // Do you want a number that changes size according to its position?
+    // // Comment out the following line and the `::before` pseudo-element.
+    // sprite.material.opacity = 0;
+  };
   updateMorphTargets = (params: IModelTargetMapper) => {
     const values = new ModelTargetMapper(params).toArray();
     if (this.bodyModel && values) {
@@ -308,7 +316,9 @@ export class ThreeJSHelper {
         // this.camera.position.set(-3, 2.5, 0.25);
 
         this.camera.updateMatrixWorld();
+
         const axesHelper = new THREE.AxesHelper(2);
+        axesHelper.visible = false;
         this.scene.add(axesHelper);
 
         this.animate();
@@ -366,14 +376,14 @@ export class ThreeJSHelper {
   private setUpOrbitControl = (camera: THREE.Camera) => {
     const controls = new OrbitControls(camera, this.labelRenderer.domElement);
 
-    // controls.minDistance = 1;
-    // controls.maxDistance = 3;
+    controls.minDistance = 1;
+    controls.maxDistance = 2.5;
 
     controls.minPolarAngle = INITIAL_CAMERA_ROTATION_LOCK.vertical.min;
     controls.maxPolarAngle = INITIAL_CAMERA_ROTATION_LOCK.vertical.max;
 
-    controls.minAzimuthAngle = INITIAL_CAMERA_ROTATION_LOCK.horizontal.min;
-    controls.maxAzimuthAngle = INITIAL_CAMERA_ROTATION_LOCK.horizontal.max;
+    // controls.minAzimuthAngle = INITIAL_CAMERA_ROTATION_LOCK.horizontal.min;
+    // controls.maxAzimuthAngle = INITIAL_CAMERA_ROTATION_LOCK.horizontal.max;
 
     camera.up.set(0, 1, 0);
 
@@ -442,9 +452,9 @@ export class ThreeJSHelper {
     scene: THREE.Scene,
     document: Document
   ): LabelModel => {
+    const label = el.title ?? "";
     //eyePNG scale is 513x469 ~ 512p
     // const map = new THREE.TextureLoader().load(eyePNG);
-    const label = el.title ?? "";
     // const spriteMaterial = new THREE.SpriteMaterial({
     //   map: map,
     //   alphaTest: 0.5,
@@ -470,42 +480,7 @@ export class ThreeJSHelper {
       offsetPosition = foundConfig.position;
       offset = foundConfig.offset;
     }
-
-    const labelDiv = createHTMLLabel(document, {
-      title: label,
-      value: "43.3cm",
-      position: offsetPosition,
-      onPointerDown: () => {
-        this.moveCamera(
-          new THREE.Vector3(
-            foundConfig?.camera.position.x,
-            foundConfig?.camera.position.y,
-            foundConfig?.camera.position.z
-          ),
-          new THREE.Vector3(position.x, position.y, position.z)
-        );
-      },
-    });
-
-    // Labeler
-    let labelObject = new CSS2DObject(labelDiv);
-    labelObject.position.copy(position);
-
-    // console.log({
-    //   viewport: this.labelRenderer!.getSize(),
-
-    //   centerPos: labelObject.center,
-    // });
-    // x +/-= 1m
-
-    labelObject.center.x += offset;
-
-    // debugger;
-    scene.add(labelObject);
-
-    // Start point
-    const startDiv = createHTMLEyeBox(document, () => {
-      //Rotate camera
+    const moveToPart = () => {
       this.moveCamera(
         new THREE.Vector3(
           foundConfig?.camera.position.x,
@@ -514,14 +489,28 @@ export class ThreeJSHelper {
         ),
         new THREE.Vector3(position.x, position.y, position.z)
       );
-      // console.log(el.label?.label.element.classList)
-      // TODO: jus a demo test,
-      // if (el.label?.label.element.classList.contains("hidden")) {
-      //   el.label?.label.element.classList.remove("hidden");
-      //   return;
-      // }
-      // el.label?.label.element.classList.add("hidden");
+    };
+
+    const labelDiv = createHTMLLabel(document, {
+      title: label,
+      value: "43.3cm",
+      position: offsetPosition,
+      onPointerDown: moveToPart,
     });
+
+    // // Labeler
+    // let labelObject = new CSS2DObject(labelDiv);
+    // labelObject.position.copy(position);
+
+    // x +/-= 1m
+
+    // labelObject.center.x += offset;
+
+    // debugger;
+    // scene.add(labelObject);
+
+    // Start point
+    const startDiv = createHTMLEyeBox(document, moveToPart);
     // startDiv.textContent = "";
 
     // Draw start point
@@ -530,52 +519,16 @@ export class ThreeJSHelper {
 
     scene.add(startObject);
 
-    return new LabelModel(labelObject);
+    // const tooltips = document.createElement("div");
+    // tooltips.classList.add("tooltips");
+    // tooltips.innerHTML = "Hello world";
+    document.body.appendChild(labelDiv);
+    // // Compute position
+
+    const labelModel = new LabelModel(labelDiv, startObject, offsetPosition);
+    labelModel.updatePosition();
+    return labelModel;
   };
-
-  // getPosition = (
-  //   obj: THREE.Mesh<
-  //     THREE.BufferGeometry<THREE.NormalBufferAttributes>,
-  //     THREE.Material | THREE.Material[],
-  //     THREE.Object3DEventMap
-  //   >
-  // ): THREE.Vector3 => {
-  //   const generator = new StaticGeometryGenerator(obj);
-  //   const geometry = generator.generate();
-  //   (geometry as any).computeBoundsTree();
-
-  //   const position = geometry.attributes.position;
-  //   const vector = new THREE.Vector3();
-
-  //   vector.fromBufferAttribute(position, 0);
-
-  //   const globalVector = obj.localToWorld(vector);
-
-  //   // var meshBVH = new MeshBVH(mesh);
-  //   // console.log({
-  //   //   vector: vector,
-  //   //   globalVector,
-  //   // });
-
-  //   return globalVector;
-  // };
-
-  // createMaterials = (skins: THREE.Texture[]) => {
-  //   var materials = [];
-
-  //   for (var i = 0; i < skins.length; i++) {
-  //     materials[i] = new THREE.MeshLambertMaterial({
-  //       color: 0xeeeeee,
-  //       // specular: 10.0,
-  //       map: skins[i],
-  //       // skinning: false,
-  //       // morphTargets: true,
-  //       // wrapAround: true,
-  //     });
-  //   }
-
-  //   return materials;
-  // };
 
   hideAllLabels = () => {
     this.annotationModels.forEach((el) => {

@@ -21,6 +21,7 @@
     "vite-plugin-singlefile": "^2.0.1"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.6.3",
     "gsap": "^3.12.5",
     "three": "^0.157.0",
     "three-mesh-bvh": "^0.7.3"

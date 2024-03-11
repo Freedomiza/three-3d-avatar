@@ -18,28 +18,30 @@ export class AnnotationModel extends BaseModel {
 
   hideLabel = () => {
     if (this.label) {
-      this.label.label.visible = false;
+      this.label.label.classList.add("hidden");
+      this.label.arrowEl.classList.add("hidden");
     }
   };
 
   showLabel = () => {
     if (this.label) {
-      this.label.label.visible = true;
+      this.label.label.classList.remove("hidden");
+      this.label.arrowEl.classList.remove("hidden");
     }
   };
   showEye = () => {
     if (this.label) {
-      this.label.sprite.visible = true;
+      this.label.eyeSprite.visible = true;
     }
   };
   hideEye = () => {
     if (this.label) {
-      this.label.sprite.visible = false;
+      this.label.eyeSprite.visible = false;
     }
   };
   updateLabelContent = (data: TranslationLabel) => {
     if (this.label) {
-      updateHTMLLabel(this.label.label.element, data);
+      updateHTMLLabel(this.label.label, data);
     }
   };
 }

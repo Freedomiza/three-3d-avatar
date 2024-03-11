@@ -8,15 +8,21 @@
 body {
   font-family: "Inter", sans-serif;
   font-size: var(--fontSize);
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .annotation-label {
+  width: max-content;
+  position: absolute;
+  top: 0;
+  left: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  position: relative;
+  // position: relative;
   padding: 1em 0 1em 0;
-  width: 120px;
+  // width: 120px;
   height: 50px;
   color: var(--secondary);
   background: transparent;
@@ -36,30 +42,9 @@ body {
     font-size: var(--fontSize);
     font-weight: bold;
   }
-  .line {
-    display: inline-block;
-    position: absolute;
-    top: 50%;
-    right: 0;
-    border: 0;
-    border-top: 1px solid var(--grey-light);
-    width: calc(120px + 1em);
-    height: 1px;
-    margin: 0;
-  }
+
   &.annotation-left {
     text-align: left;
-    .line {
-      display: inline-block;
-      position: absolute;
-      top: 50%;
-      left: 0;
-      border: 0;
-      border-top: 1px solid var(--grey-light);
-      width: calc(120px + 1em);
-      height: 1px;
-      margin: 0;
-    }
   }
 }
 
@@ -74,4 +59,25 @@ body {
 }
 .hidden {
   display: none !important;
+}
+
+.tooltips {
+  width: max-content;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #222;
+  color: white;
+  font-weight: bold;
+  padding: 5px;
+  border-radius: 4px;
+  font-size: 90%;
+}
+
+.arrow {
+  position: absolute;
+  height: 1px;
+  overflow: auto;
+  width: 100%;
+  border-top: 0.5px solid rgba(20, 20, 43, 0.2);
 }

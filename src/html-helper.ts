@@ -22,7 +22,7 @@ export const createHTMLLabel = (
   labelDiv.innerHTML = `
   
     <span class="annotation-label-title">${title}</span>
-    <hr class="line" />
+    <div class="line"> </div>
     <span class="annotation-label-value">${value}</span>
   `;
 
