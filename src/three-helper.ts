@@ -294,27 +294,16 @@ export class ThreeJSHelper {
 
         this.scene.add(result.scene);
 
-        const wireframeMaterial = new THREE.MeshBasicMaterial({
-          wireframe: false,
-          transparent: true,
-          opacity: 0.5,
-          depthWrite: false,
-          // visible: false,
-        });
-
         // // prep the geometry
         this.staticGeometryGenerator = new StaticGeometryGenerator(models);
         // this.originalMaterials = this.staticGeometryGenerator.getMaterials();
 
-        this.meshHelper = new THREE.Mesh(
-          new THREE.BufferGeometry(),
-          wireframeMaterial
-        );
+        // this.meshHelper = new THREE.Mesh(new THREE.BufferGeometry());
 
-        this.meshHelper.receiveShadow = false;
-        this.scene.add(this.meshHelper);
-        this.bvhHelper = new MeshBVHHelper(this.meshHelper, 10);
-        this.scene.add(this.bvhHelper);
+        // this.meshHelper.receiveShadow = false;
+        // this.scene.add(this.meshHelper);
+        // this.bvhHelper = new MeshBVHHelper(this.meshHelper, 10);
+        // this.scene.add(this.bvhHelper);
         this.scene.updateMatrixWorld(true);
 
         this.regenerateMesh();
@@ -462,6 +451,7 @@ export class ThreeJSHelper {
     const spriteMaterial = new THREE.SpriteMaterial({
       map: map,
       alphaTest: 0.5,
+
       transparent: true,
       depthTest: false,
       depthWrite: false,
