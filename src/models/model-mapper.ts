@@ -36,7 +36,7 @@ export interface IModelTargetMapper {
   waistIndicatorDisable: number;
   acrossBackShoulderWidthIndicatorDisable: number;
 
-  // toArray(): number[];
+  heightInM: number;
 }
 
 export class ModelTargetMapper implements IModelTargetMapper {
@@ -76,10 +76,12 @@ export class ModelTargetMapper implements IModelTargetMapper {
   topHipIndicatorDisable: number = 0;
   waistIndicatorDisable: number = 0;
   acrossBackShoulderWidthIndicatorDisable: number = 0;
+  height: number = 0;
 
   constructor(data: IModelTargetMapper) {
     Object.assign(this, data);
   }
+  heightInM: number = 0;
   toArray(): number[] {
     return [
       this.muscular,

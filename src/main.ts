@@ -71,6 +71,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         topHipIndicatorDisable: 0,
         waistIndicatorDisable: 0,
         acrossBackShoulderWidthIndicatorDisable: 0,
+        heightInM: 1.7,
       },
       modelData,
       onLoadModelCompeted,

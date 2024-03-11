@@ -8,6 +8,6 @@ export const INITIAL_CAMERA_POSITION = {
 
 export const INITIAL_CAMERA_TARGET = {
   x: 0,
-  y: 0.5,
+  y: 1,
   z: 0,
 };

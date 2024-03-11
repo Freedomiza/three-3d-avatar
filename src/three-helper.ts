@@ -61,6 +61,17 @@ export class ThreeJSHelper {
 
   eyeScale: number = DEFAULT_EYE_SCALE;
 
+  private _bodyHeight: number = INITIAL_CAMERA_TARGET.y;
+  get bodyHeight() {
+    return this._bodyHeight;
+  }
+
+  set bodyHeight(value: number) {
+    this._bodyHeight = value;
+    this.controls.target.set(0, value / 2, 0);
+    this.controls.update();
+  }
+
   constructor(document: Document) {
     this.document = document;
     // Setup render
@@ -299,11 +310,8 @@ export class ThreeJSHelper {
         );
 
         this.meshHelper.receiveShadow = false;
-
         this.scene.add(this.meshHelper);
-
         this.bvhHelper = new MeshBVHHelper(this.meshHelper, 10);
-
         this.scene.add(this.bvhHelper);
         this.scene.updateMatrixWorld(true);
 
@@ -316,6 +324,8 @@ export class ThreeJSHelper {
         this.scene.add(axesHelper);
 
         this.animate();
+
+        this.bodyHeight = params.heightInM ?? 0.5;
 
         callback && callback();
       };
@@ -369,9 +379,10 @@ export class ThreeJSHelper {
     const controls = new OrbitControls(camera, this.labelRenderer.domElement);
 
     // controls.minDistance = 1;
-    // controls.maxDistance = 90;
-    controls.minPolarAngle = -Math.PI / 2;
-    controls.maxPolarAngle = Math.PI / 2;
+    // controls.maxDistance = 3;
+
+    // controls.minPolarAngle = 0;
+    // controls.maxPolarAngle = Math.PI / 2;
 
     camera.up.set(0, 1, 0);
 
@@ -592,7 +603,7 @@ export class ThreeJSHelper {
       ),
       new THREE.Vector3(
         INITIAL_CAMERA_TARGET.x,
-        INITIAL_CAMERA_TARGET.y,
+        this.bodyHeight / 2,
         INITIAL_CAMERA_TARGET.z
       )
     );
