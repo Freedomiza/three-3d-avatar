@@ -11,3 +11,14 @@ export const INITIAL_CAMERA_TARGET = {
   y: 1,
   z: 0,
 };
+
+export const INITIAL_CAMERA_ROTATION_LOCK = {
+  vertical: {
+    min: -Math.PI / 4,
+    max: Math.PI / 2,
+  },
+  horizontal: {
+    min: -Math.PI,
+    max: 0,
+  },
+};

@@ -37,6 +37,7 @@ declare global {
 import {
   DEFAULT_EYE_SCALE,
   INITIAL_CAMERA_POSITION,
+  INITIAL_CAMERA_ROTATION_LOCK,
   INITIAL_CAMERA_TARGET,
 } from "./config";
 import { TranslationLabel } from "./models/translation-label";
@@ -110,6 +111,7 @@ export class ThreeJSHelper {
   setUpScene = (): THREE.Scene => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
+
     return scene;
   };
 
@@ -381,8 +383,11 @@ export class ThreeJSHelper {
     // controls.minDistance = 1;
     // controls.maxDistance = 3;
 
-    // controls.minPolarAngle = 0;
-    // controls.maxPolarAngle = Math.PI / 2;
+    controls.minPolarAngle = INITIAL_CAMERA_ROTATION_LOCK.vertical.min;
+    controls.maxPolarAngle = INITIAL_CAMERA_ROTATION_LOCK.vertical.max;
+
+    controls.minAzimuthAngle = INITIAL_CAMERA_ROTATION_LOCK.horizontal.min;
+    controls.maxAzimuthAngle = INITIAL_CAMERA_ROTATION_LOCK.horizontal.max;
 
     camera.up.set(0, 1, 0);
 
@@ -397,7 +402,8 @@ export class ThreeJSHelper {
       INITIAL_CAMERA_TARGET.y,
       INITIAL_CAMERA_TARGET.z
     );
-
+    // camera.set
+    controls.enablePan = false;
     controls.update();
 
     return controls;
