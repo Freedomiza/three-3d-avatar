@@ -18,7 +18,7 @@ import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { IModelTargetMapper, ModelTargetMapper } from "./models/model-mapper";
 
-import eyePNG from "./assets/eye.raw?raw";
+// import eyePNG from "./assets/eye.raw?raw";
 import { AnnotationModel } from "./models/annotation-model";
 import { LabelModel } from "./models/label-model";
 import { createHTMLEyeBox, createHTMLLabel } from "./html-helper";
@@ -198,32 +198,29 @@ export class ThreeJSHelper {
   render = () => {
     this.renderer.render(this.scene, this.camera);
     this.labelRenderer.render(this.scene, this.camera);
-    this.updateAnnotationOpacity();
+    // this.updateAnnotationOpacity();
   };
 
   // Update all eye annotation which is behind and which is in front of the camera
-  updateAnnotationOpacity = () => {
-    const meshDistance = this.camera.position.distanceTo(
-      this.bodyModel!.mesh!.position
-    );
-
-    this.annotationModels.forEach((el) => {
-      const pos = el.position!;
-      const spriteDistance = this.camera.position.distanceTo(pos);
-      var spriteBehindObject = spriteDistance > meshDistance;
-      el.label!.sprite!.material.opacity = spriteBehindObject ? 0.5 : 1;
-      el.label!.label.element.style.opacity = spriteBehindObject ? "0.5" : "1";
-
-      this.eyeScale = DEFAULT_EYE_SCALE * spriteDistance * 0.5;
-      el.label?.sprite.scale.set(this.eyeScale, this.eyeScale, this.eyeScale);
-    });
-
-    // spriteBehindObject = spriteDistance > meshDistance;
-    // sprite.material.opacity = spriteBehindObject ? 0.25 : 1;
-    // // Do you want a number that changes size according to its position?
-    // // Comment out the following line and the `::before` pseudo-element.
-    // sprite.material.opacity = 0;
-  };
+  // updateAnnotationOpacity = () => {
+  // const meshDistance = this.camera.position.distanceTo(
+  //   this.bodyModel!.mesh!.position
+  // );
+  // this.annotationModels.forEach((el) => {
+  //   const pos = el.position!;
+  //   const spriteDistance = this.camera.position.distanceTo(pos);
+  //   var spriteBehindObject = spriteDistance > meshDistance;
+  //   // el.label!.sprite!.material.opacity = spriteBehindObject ? 0.5 : 1;
+  //   el.label!.label.element.style.opacity = spriteBehindObject ? "0.5" : "1";
+  //   // this.eyeScale = DEFAULT_EYE_SCALE * spriteDistance * 0.35;
+  //   // el.label?.sprite.scale.set(this.eyeScale, this.eyeScale, this.eyeScale);
+  // });
+  // spriteBehindObject = spriteDistance > meshDistance;
+  // sprite.material.opacity = spriteBehindObject ? 0.25 : 1;
+  // // Do you want a number that changes size according to its position?
+  // // Comment out the following line and the `::before` pseudo-element.
+  // sprite.material.opacity = 0;
+  // };
   updateMorphTargets = (params: IModelTargetMapper) => {
     const values = new ModelTargetMapper(params).toArray();
     if (this.bodyModel && values) {
@@ -446,22 +443,22 @@ export class ThreeJSHelper {
     document: Document
   ): LabelModel => {
     //eyePNG scale is 513x469 ~ 512p
-    const map = new THREE.TextureLoader().load(eyePNG);
+    // const map = new THREE.TextureLoader().load(eyePNG);
     const label = el.title ?? "";
-    const spriteMaterial = new THREE.SpriteMaterial({
-      map: map,
-      alphaTest: 0.5,
+    // const spriteMaterial = new THREE.SpriteMaterial({
+    //   map: map,
+    //   alphaTest: 0.5,
 
-      transparent: true,
-      depthTest: false,
-      depthWrite: false,
-    });
+    //   transparent: true,
+    //   depthTest: false,
+    //   depthWrite: false,
+    // });
 
-    const sprite = new THREE.Sprite(spriteMaterial);
-    sprite.position.set(position.x, position.y, position.z);
-    sprite.scale.set(this.eyeScale, this.eyeScale, this.eyeScale);
+    // const sprite = new THREE.Sprite(spriteMaterial);
+    // sprite.position.set(position.x, position.y, position.z);
+    // sprite.scale.set(this.eyeScale, this.eyeScale, this.eyeScale);
 
-    scene.add(sprite);
+    // scene.add(sprite);
 
     // // Create a CSS2D label
 
@@ -533,7 +530,7 @@ export class ThreeJSHelper {
 
     scene.add(startObject);
 
-    return new LabelModel(labelObject, sprite);
+    return new LabelModel(labelObject);
   };
 
   // getPosition = (
