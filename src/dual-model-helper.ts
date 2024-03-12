@@ -1,3 +1,4 @@
+import { gsap } from "gsap";
 import * as THREE from "three";
 import { GLTF, GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
@@ -334,5 +335,68 @@ export class DualModelHelper {
     updateMorphTargets(params, {
       bodyModel: this.bodyModel2,
     });
+  };
+
+  resetView = () => {
+    this.moveCamera(
+      this.camera1!,
+      this.controls1!,
+      new THREE.Vector3(
+        INITIAL_DUAL_CAMERA_POSITION.x,
+        INITIAL_DUAL_CAMERA_POSITION.y,
+        INITIAL_DUAL_CAMERA_POSITION.z
+      ),
+      new THREE.Vector3(
+        INITIAL_CAMERA_TARGET.x,
+        this.bodyHeight / 2,
+        INITIAL_CAMERA_TARGET.z
+      )
+    );
+  };
+
+  moveCamera(
+    camera: THREE.Camera,
+    controls: OrbitControls,
+    position: THREE.Vector3,
+    target: THREE.Vector3
+  ) {
+    // if (!this.camera1 || !this.controls1) return;
+    // const controls = this.controls1;
+
+    // Animate the camera
+    gsap.to(camera.position, {
+      duration: 1, // Animation duration in seconds
+      x: position.x,
+      y: position.y,
+      z: position.z,
+      onUpdate: () => {
+        // controls.update(); // Important: Update OrbitControls
+      },
+    });
+
+    // Animate the camera
+    gsap.to(controls.target, {
+      duration: 1, // Animation duration in seconds
+      x: target.x,
+      y: target.y,
+      z: target.z,
+      onUpdate: () => {
+        controls.update(); // Important: Update OrbitControls
+      },
+    });
+  }
+
+  showBody1WireFrame = () => {
+    this.bodyModel1?.toggleWireFrame(true);
+  };
+  showBody2WireFrame = () => {
+    this.bodyModel2?.toggleWireFrame(true);
+  };
+
+  hideBody1WireFrame = () => {
+    this.bodyModel1?.toggleWireFrame(false);
+  };
+  hideBody2WireFrame = () => {
+    this.bodyModel2?.toggleWireFrame(false);
   };
 }

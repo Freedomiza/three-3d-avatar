@@ -8,8 +8,9 @@ export default class BodyModel extends BaseModel {
 
   toggleWireFrame = (value: boolean) => {
     if (this.mesh?.material) {
-      (this.mesh?.material as THREE.MeshStandardMaterial).wireframe = value;
-      (this.mesh.material as THREE.MeshStandardMaterial).needsUpdate = true;
+      const material = this.mesh?.material as THREE.MeshStandardMaterial;
+      material.wireframe = value;
+      material.needsUpdate = true;
     }
   };
 

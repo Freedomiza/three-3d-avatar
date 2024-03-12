@@ -152,7 +152,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.FlutterChannelReady.postMessage("Hello from JavaScript!");
   }
 
-  // loadDummyModel();
+  loadDummyModel();
 
   // loadDualDummyModel();
 

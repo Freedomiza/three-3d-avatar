@@ -6,6 +6,7 @@ export class BaseModel {
   position?: THREE.Vector3;
   rotation: THREE.Euler;
   scale: THREE.Vector3;
+  _mat?: THREE.Material | THREE.Material[];
 
   constructor(
     public mesh: THREE.Mesh<
@@ -32,6 +33,7 @@ export class BaseModel {
 
   applySkinTexture = (mat: THREE.Material | THREE.Material[]): void => {
     this.mesh.material = mat;
+    this._mat = mat;
   };
 
   calculatePosition = (): THREE.Vector3 => {
