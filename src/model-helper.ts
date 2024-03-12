@@ -35,3 +35,7 @@ export const updateMorphTargets = (
       });
   }
 };
+
+export const getAvg = (...arg: number[]): number => {
+  return arg.reduce((a, b) => a + b) / arg.length;
+};

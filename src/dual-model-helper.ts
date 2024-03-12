@@ -4,13 +4,17 @@ import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 import {
-  INITIAL_CAMERA_POSITION,
   INITIAL_CAMERA_ROTATION_LOCK,
   INITIAL_CAMERA_TARGET,
+  INITIAL_DUAL_CAMERA_POSITION,
 } from "./config";
 import BodyModel from "./models/body-model";
 import { IModelTargetMapper } from "./models/model-mapper";
-import { filterBodyModelFromList, updateMorphTargets } from "./model-helper";
+import {
+  filterBodyModelFromList,
+  getAvg,
+  updateMorphTargets,
+} from "./model-helper";
 
 export class DualModelHelper {
   private domNode?: HTMLDivElement;
@@ -38,8 +42,12 @@ export class DualModelHelper {
 
   set bodyHeight(value: number) {
     this._bodyHeight = value;
+
     this.controls1?.target.set(0, value / 2, 0);
     this.controls1?.update();
+
+    this.controls2?.target.set(0, value / 2, 0);
+    this.controls2?.update();
   }
 
   private createDomNode = (document: Document): HTMLDivElement => {
@@ -151,7 +159,6 @@ export class DualModelHelper {
       0.1,
       20
     );
-    camera.aspect = halfWidth / window.innerHeight;
 
     return camera;
   };
@@ -218,9 +225,9 @@ export class DualModelHelper {
     camera.up.set(0, 1, 0);
 
     camera.position.set(
-      INITIAL_CAMERA_POSITION.x,
-      INITIAL_CAMERA_POSITION.y,
-      INITIAL_CAMERA_POSITION.z
+      INITIAL_DUAL_CAMERA_POSITION.x,
+      INITIAL_DUAL_CAMERA_POSITION.y,
+      INITIAL_DUAL_CAMERA_POSITION.z
     );
 
     controls.target.set(
@@ -291,7 +298,8 @@ export class DualModelHelper {
         this.scene1?.updateMatrixWorld(true);
         this.scene1?.updateMatrixWorld(true);
         this.animate();
-        this.bodyHeight = params1.heightInM ?? 0.5;
+
+        this.bodyHeight = getAvg(params1.heightInM, params2.heightInM) ?? 0.5;
 
         callback?.();
       };

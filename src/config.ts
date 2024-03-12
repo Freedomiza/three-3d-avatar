@@ -6,6 +6,12 @@ export const INITIAL_CAMERA_POSITION = {
   z: 0,
 };
 
+export const INITIAL_DUAL_CAMERA_POSITION = {
+  x: -3.5,
+  y: 1,
+  z: 0,
+};
+
 export const INITIAL_CAMERA_TARGET = {
   x: 0,
   y: 1,
