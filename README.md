@@ -130,16 +130,13 @@ export interface IThreeJSHelper {
 This class manages the rendering and interaction with two synchronized Three.js scenes, providing a dual-view setup.
 
 ```typescript
+
 export interface DualModelHelper {
-  // ... (Properties)
 
-  init = async (document: Document) => {
-    // ... (Initialization logic)
-  };
+  // init DualModel 3d render
+  init:  async (document: Document) => Promise<void>;
 
-  unloadModel: () => void = () => {
-    // ... (Model unloading and cleanup)
-  };
+  unloadModel: () => void;
 
   loadDualModel = (
     isMale: boolean,
@@ -148,9 +145,11 @@ export interface DualModelHelper {
     objData: string,
     callback?: () => void,
     onError: (error: any) => void = () => {}
-  ) => {
-    // ... (Dual model loading logic)
-  };
+  ) =>  void;
+    //Update left model
+   updateMorphTargets1: (params: IModelTargetMapper) => void;
+   //Update right model
+   updateMorphTargets2: (params: IModelTargetMapper) => void;
 }
 ```
 

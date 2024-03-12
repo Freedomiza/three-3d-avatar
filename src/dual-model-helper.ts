@@ -315,4 +315,16 @@ export class DualModelHelper {
     this.renderer1?.render(this.scene1!, this.camera1!);
     this.renderer2?.render(this.scene2!, this.camera2!);
   };
+
+  updateMorphTargets1 = (params: IModelTargetMapper) => {
+    updateMorphTargets(params, {
+      bodyModel: this.bodyModel1,
+    });
+  };
+
+  updateMorphTargets2 = (params: IModelTargetMapper) => {
+    updateMorphTargets(params, {
+      bodyModel: this.bodyModel2,
+    });
+  };
 }
