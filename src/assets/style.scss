@@ -81,3 +81,25 @@ body {
   width: 100%;
   border-top: 0.5px solid rgba(20, 20, 43, 0.2);
 }
+
+.dual-renderer {
+  // position: absolute;
+  // top: 0;
+  display: flex;
+  flex-direction: row;
+  width: 100vw;
+  height: auto;
+  .left-view {
+    display: flex;
+  }
+  .right-view {
+    display: flex;
+  }
+}
+
+.renderer {
+  position: absolute;
+  top: 0;
+  width: 100vw;
+  height: auto;
+}

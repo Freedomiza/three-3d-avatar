@@ -23,6 +23,12 @@ export class LabelModel {
     this.placement = placement;
   }
 
+  remove = () => {
+    this.eyeSprite.remove();
+    this.label.remove();
+    this.arrowEl.remove();
+  };
+
   updatePosition = () => {
     const startDiv = this.eyeSprite.element;
     const tooltips = this.label;

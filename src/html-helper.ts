@@ -1,20 +1,17 @@
 import { TranslationLabel } from "./models/translation-label";
 // import eyePNG from "./assets/eye.raw?raw";
 
-export const createHTMLLabel = (
-  document: Document,
-  {
-    title,
-    value,
-    onPointerDown,
-    position,
-  }: {
-    title: string;
-    value: string;
-    position: string;
-    onPointerDown?: () => void;
-  }
-) => {
+export const createHTMLLabel = ({
+  title,
+  value,
+  onPointerDown,
+  position,
+}: {
+  title: string;
+  value: string;
+  position: string;
+  onPointerDown?: () => void;
+}) => {
   const labelDiv = document.createElement("div");
 
   labelDiv.className = `annotation-label annotation-${position}`;
@@ -31,10 +28,7 @@ export const createHTMLLabel = (
   return labelDiv;
 };
 
-export const createHTMLEyeBox = (
-  document: Document,
-  onPointerDown: () => void
-) => {
+export const createHTMLEyeBox = (onPointerDown: () => void) => {
   const element = document.createElement("div");
   element.className = "annotation-label-arrow";
   // element.style.backgroundImage = `url(${eyePNG})`;
@@ -58,4 +52,13 @@ export const updateHTMLLabel = (
       value.textContent = data.value;
     }
   }
+};
+
+export const debounce = (fn: Function, ms = 300) => {
+  console.log("debounce called");
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return function (this: any, ...args: any[]) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn.apply(this, args), ms);
+  };
 };

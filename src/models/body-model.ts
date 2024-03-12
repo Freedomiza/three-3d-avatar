@@ -32,6 +32,10 @@ export default class BodyModel extends BaseModel {
 
     return me0;
   };
+
+  clone: () => BodyModel = () => {
+    return new BodyModel(this.mesh.clone());
+  };
 }
 
 enum MeasurementKeys {

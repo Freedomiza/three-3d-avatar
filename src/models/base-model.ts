@@ -2,25 +2,18 @@ import * as THREE from "three";
 import { StaticGeometryGenerator } from "three-mesh-bvh";
 
 export class BaseModel {
-  mesh: THREE.Mesh<
-    THREE.BufferGeometry<THREE.NormalBufferAttributes>,
-    THREE.Material | THREE.Material[],
-    THREE.Object3DEventMap
-  >;
-
   title: string;
   position?: THREE.Vector3;
   rotation: THREE.Euler;
   scale: THREE.Vector3;
 
   constructor(
-    mesh: THREE.Mesh<
+    public mesh: THREE.Mesh<
       THREE.BufferGeometry<THREE.NormalBufferAttributes>,
       THREE.Material | THREE.Material[],
       THREE.Object3DEventMap
     >
   ) {
-    this.mesh = mesh;
     this.rotation = mesh.rotation;
     this.scale = mesh.scale;
     this.title = mesh.name;
