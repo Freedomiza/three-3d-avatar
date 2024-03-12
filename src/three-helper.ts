@@ -46,22 +46,22 @@ import {
 } from "./model-helper";
 
 export class ThreeJSHelper {
-  renderer?: THREE.WebGLRenderer;
-  scene?: THREE.Scene;
+  private renderer?: THREE.WebGLRenderer;
+  private scene?: THREE.Scene;
   camera?: THREE.PerspectiveCamera;
 
   bodyModel?: BodyModel;
 
-  labelRenderer?: CSS2DRenderer;
+  private labelRenderer?: CSS2DRenderer;
 
   // document: Document;
-  domNode?: HTMLDivElement;
+  private domNode?: HTMLDivElement;
 
-  meshHelper?: THREE.Mesh;
-  originalMaterials: any;
-  staticGeometryGenerator?: StaticGeometryGenerator;
-  bvhHelper?: MeshBVHHelper;
-  controls?: OrbitControls;
+  private meshHelper?: THREE.Mesh;
+
+  private staticGeometryGenerator?: StaticGeometryGenerator;
+  private bvhHelper?: MeshBVHHelper;
+  private controls?: OrbitControls;
   annotationModels: AnnotationModel[] = [];
 
   private _bodyHeight: number = INITIAL_CAMERA_TARGET.y;
@@ -344,12 +344,7 @@ export class ThreeJSHelper {
         this.annotationModels.forEach((el) => {
           // el.position = this.getPosition(el.mesh);
           el.calculatePosition();
-          el.label = this.createLabel(
-            el,
-            el.position!,
-            this.scene!,
-            this.domNode!
-          );
+          el.label = this.createLabel(el, el.position!, this.scene!);
         });
 
         this.scene.add(...result.scene.children);
@@ -509,8 +504,7 @@ export class ThreeJSHelper {
   createLabel = (
     el: AnnotationModel,
     position: THREE.Vector3,
-    scene: THREE.Scene,
-    document: HTMLDivElement
+    scene: THREE.Scene
   ): LabelModel => {
     const label = el.title ?? "";
     //eyePNG scale is 513x469 ~ 512p
@@ -677,17 +671,5 @@ export class ThreeJSHelper {
 
   lockCamera: () => void = () => {
     if (this.controls) this.controls.enabled = false;
-  };
-
-  loadDualModel: (
-    isMale: boolean,
-    params1: IModelTargetMapper,
-    params2: IModelTargetMapper
-  ) => void = (isMale, param1, params2) => {
-    console.log({
-      isMale,
-      param1,
-      params2,
-    });
   };
 }

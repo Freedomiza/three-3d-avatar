@@ -154,10 +154,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // loadDummyModel();
 
-  loadDualDummyModel();
+  // loadDualDummyModel();
 
-  window.loadDummyModel = loadDummyModel;
-  window.loadDualDummyModel = loadDualDummyModel;
+  // window.loadDummyModel = loadDummyModel;
+  // window.loadDualDummyModel = loadDualDummyModel;
 
   // window.updateMorphTargets = threeHelper.updateMorphTargets;
 

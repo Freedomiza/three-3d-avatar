@@ -48,52 +48,154 @@ This document outlines custom extensions made to the global `Window` interface w
 
 ### Methods
 
-#### 3D Model Manipulation
+#### _Window Object props_
 
-- **`loadModel(isMale: boolean, params: IModelTargetMapper) => void`:** Loads a 3D model, possibly into a viewer. Parameters indicate gender and morph target customization settings.
+- **`loadModel(isMale: boolean, params: IModelTargetMapper): void`:**
 
-- **`loadDummyModel() => void`:** Loads a placeholder or default 3D model.
+  - Loads a 3D model (presuming the context of Three.js or similar).
+  - **`isMale`:** Determines if a male or female model variant is used.
+  - **`params`:** An object conforming to the `IModelTargetMapper` interface, providing configuration data for loading the model.
 
-- **`updateMorphTargets(params: IModelTargetMapper) => void`:** Updates the morph targets (shape modifications) of an existing 3D model.
+- **`loadDualModel(isMale: boolean, params1: IModelTargetMapper, params2: IModelTargetMapper): void`:**
 
-#### View and Camera Control
+  - Loads two 3D models simultaneously.
+  - **`isMale`:** Likely indicates the gender for both models.
+  - **`params1` and `params2`:** Individual `IModelTargetMapper` objects for customizing each model.
 
-- **`resetView() => void`:** Resets the camera or viewport to a default state.
+- **`FlutterChannelReady` (any):** Probably a property or object related to signaling or communication readiness within a Flutter/Webview hybrid context.
 
-- **`showWireFrame() => void`:** Displays the 3D model in wireframe mode.
+- **`singleView` (ThreeJSHelper):** A property holding an instance of a `ThreeJSHelper` class. This class likely assists in managing a single Three.js scene or view.
 
-- **`hideWireFrame() => void`:** Hides the wireframe overlay of a 3D model.
+- **`dualView` (DualModelHelper):** A property holding an instance of a `DualModelHelper` class, probably responsible for managing two simultaneous Three.js scenes or views.
 
-- **`moveCamera(pos: IPosition, target: IPosition) => void`:** Repositions the camera within the 3D scene. Takes the new camera position (`pos`) and the point to look at (`target`).
+## `SingleView`: Handle single view port model
 
-- **`zoomToAnnotation(annotation: string) => void`:** Zooms the camera into a specific part of the model, likely identified by an 'annotation' label.
+```typescript
+export interface IThreeJSHelper {
+  dispose: () => void;
+  init: (document: Document) => void;
+  getCenterTarget: () => THREE.Vector3;
+  onControlChanged: () => void;
+  setUpScene: () => THREE.Scene;
+  generateAnnotations: (mesh: THREE.Mesh[]) => AnnotationModel[];
+  setUpRenderer: (div: HTMLDivElement) => THREE.WebGLRenderer;
+  setUpCamera: () => THREE.PerspectiveCamera;
+  moveCamera: (position: THREE.Vector3, target: THREE.Vector3) => void;
+  findAnnotationConfig: (annotation: AnnotationModel) => any;
+  zoomToAnnotation: (label: string) => void;
+  render: () => void;
+  updateAnnotationOpacity: () => void;
+  updateMorphTargets: (params: IModelTargetMapper) => void;
+  unloadModel: () => void;
+  loadModel: (
+    isMale: boolean,
+    params: IModelTargetMapper,
+    modelData: string,
+    callback?: () => void,
+    onError: (error: any) => void
+  ) => void;
+  regenerateMesh: () => void;
+  animate: () => void;
+  onWindowResize: () => void;
+  setUpOrbitControl: (
+    camera: THREE.Camera,
+    labelRender: CSS2DRenderer
+  ) => OrbitControls;
+  setupLabelRenderer: (div: HTMLDivElement) => CSS2DRenderer;
+  createLabel: (
+    el: AnnotationModel,
+    position: THREE.Vector3,
+    scene: THREE.Scene
+  ) => LabelModel;
+  hideAllLabels: () => void;
+  showAllLabels: () => void;
+  resetView: () => void;
+  showWireFrame: () => void;
+  hideWireFrame: () => void;
+  findAnnotationByName: (name: string) => AnnotationModel | undefined;
+  hideLabel: (annotation: string) => void;
+  showLabel: (annotation: string) => void;
+  hideEye: (annotation: string) => void;
+  showEye: (annotation: string) => void;
+  showAllEyes: () => void;
+  hideAllEyes: () => void;
+  updateLabelContent: (annotation: string, data: TranslationLabel) => void;
+  unlockCamera: () => void;
+  lockCamera: () => void;
+}
+```
 
-#### Label Management
+## `DualViews`: DualModelHelper Class
 
-- **`hideAllLabels() => void`:** Hides all labels or annotations associated with the 3D model.
+This class manages the rendering and interaction with two synchronized Three.js scenes, providing a dual-view setup.
 
-- **`showAllLabels() => void`:** Shows all labels or annotations on the 3D model.
+```typescript
+export interface DualModelHelper {
+  // ... (Properties)
 
-- **`hideLabel(annotation: string) => void`:** Hides a specific label by its annotation string.
+  init = async (document: Document) => {
+    // ... (Initialization logic)
+  };
 
-- **`showLabel(annotation: string) => void`:** Shows a specific label by its annotation string.
+  unloadModel: () => void = () => {
+    // ... (Model unloading and cleanup)
+  };
 
-#### Eye Control (If applicable)
+  loadDualModel = (
+    isMale: boolean,
+    params1: IModelTargetMapper,
+    params2: IModelTargetMapper,
+    objData: string,
+    callback?: () => void,
+    onError: (error: any) => void = () => {}
+  ) => {
+    // ... (Dual model loading logic)
+  };
+}
+```
 
-- **`hideAllEyes() => void`:** Hides elements representing eyes on the 3D model (if the model has such features).
+### `IModelTargetMapper` Interface
 
-- **`showAllEyes() => void`:** Shows eye elements on the 3D model.
+```typescript
+export interface IModelTargetMapper {
+  muscular: number;
+  bodyFat: number;
+  skinny: number;
+  neckGirth: number;
+  baseNeckGirth: number;
+  acrossBackShoulderWidth: number;
+  breastSize: number;
+  underBustGirth: number;
+  waistGirth: number;
+  bellyWaistGirth: number;
+  topHipGirth: number;
+  hipGirth: number;
+  thighGirthR: number;
+  midThighGirthR: number;
+  kneeGirthR: number;
+  calfGirthR: number;
+  upperArmGirthR: number;
+  forearmGirthR: number;
+  wristGirthR: number;
+  shoulderToElbowR: number;
+  forearmLength: number;
+  topToBackNeck: number;
+  backNeckToBust: number;
+  bustToWaist: number;
+  waistToBellyWaist: number;
+  bellyWaistToTopHip: number;
+  topHiptoHip: number;
+  hipToInsideLeg: number;
+  insideLegToKnee: number;
+  kneeHeight: number;
+  outerAnkleHeightR: number;
+  male: number;
+  female: number;
+  topHipIndicatorDisable: number;
+  waistIndicatorDisable: number;
+  acrossBackShoulderWidthIndicatorDisable: number;
 
-- **`hideEye(annotation: string) => void`:** Hides a specific eye element based on its annotation.
-
-- **`showEye(annotation: string) => void`:** Shows a specific eye element based on its annotation.
-
-#### Other
-
-- **`updateLabelContent(annotation: string, data: TranslationLabel) => void`:** Updates the text content of a label. Implies the potential for multi-lingual support.
-
-### Additional Notes
-
-- **`IPosition` Interface:** Likely defines a 3D coordinate (`x`, `y`, `z`).
-- **`IModelTargetMapper` Interface:** (Not shown) likely defines how morph targets are configured on the 3D model.
-- **`TranslationLabel` Interface** (Not shown) likely defines the structure of label text and its translations.
+  heightInM: number;
+  toArray: () => number[];
+}
+```

@@ -11,20 +11,19 @@ import {
 import BodyModel from "./models/body-model";
 import { IModelTargetMapper } from "./models/model-mapper";
 import { filterBodyModelFromList, updateMorphTargets } from "./model-helper";
-import { debounce } from "./html-helper";
 
 export class DualModelHelper {
-  domNode?: HTMLDivElement;
-  renderer1?: THREE.WebGLRenderer;
-  renderer2?: THREE.WebGLRenderer;
-  scene1?: THREE.Scene;
-  scene2?: THREE.Scene;
+  private domNode?: HTMLDivElement;
+  private renderer1?: THREE.WebGLRenderer;
+  private renderer2?: THREE.WebGLRenderer;
+  private scene1?: THREE.Scene;
+  private scene2?: THREE.Scene;
 
   camera1?: THREE.PerspectiveCamera;
   camera2?: THREE.PerspectiveCamera;
 
-  controls1?: OrbitControls;
-  controls2?: OrbitControls;
+  private controls1?: OrbitControls;
+  private controls2?: OrbitControls;
   bodyModel1?: BodyModel;
   bodyModel2?: BodyModel;
 
@@ -79,10 +78,10 @@ export class DualModelHelper {
     window.addEventListener("resize", this.onWindowResize);
   };
 
-  control1TimerId?: number;
-  control2TimerId?: number;
+  private control1TimerId?: number;
+  private control2TimerId?: number;
 
-  onControl1Change = () => {
+  private onControl1Change = () => {
     if (!this.camera1 || !this.camera2 || this.control2TimerId) return;
 
     // Synchronize camera positions and rotations
@@ -100,7 +99,7 @@ export class DualModelHelper {
     this.render();
   };
 
-  onControl2Change = () => {
+  private onControl2Change = () => {
     if (!this.camera1 || !this.camera2 || this.control1TimerId) return;
     // console.log({ cam1: this.camera1, cam2: this.camera2 });
     // Synchronize camera positions and rotations
@@ -118,7 +117,7 @@ export class DualModelHelper {
     }, 300);
   };
 
-  setUpRenderer = (div: HTMLDivElement): void => {
+  private setUpRenderer = (div: HTMLDivElement): void => {
     const renderer1 = new THREE.WebGLRenderer({ antialias: true });
     const renderer2 = new THREE.WebGLRenderer({ antialias: true });
 
@@ -144,7 +143,7 @@ export class DualModelHelper {
     this.renderer2 = renderer2;
   };
 
-  setUpCamera = () => {
+  private setUpCamera = () => {
     const halfWidth = window.innerWidth / 2;
     let camera = new THREE.PerspectiveCamera(
       55,
@@ -157,7 +156,7 @@ export class DualModelHelper {
     return camera;
   };
 
-  setUpScene = (): THREE.Scene => {
+  private setUpScene = (): THREE.Scene => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
 
@@ -201,11 +200,14 @@ export class DualModelHelper {
     }
   };
 
-  setUpOrbitControl = (camera: THREE.Camera, renderer: THREE.WebGLRenderer) => {
+  private setUpOrbitControl = (
+    camera: THREE.Camera,
+    renderer: THREE.WebGLRenderer
+  ) => {
     const controls = new OrbitControls(camera, renderer.domElement);
 
     controls.minDistance = 1;
-    controls.maxDistance = 2.5;
+    controls.maxDistance = 3.5;
 
     controls.minPolarAngle = INITIAL_CAMERA_ROTATION_LOCK.vertical.min;
     controls.maxPolarAngle = INITIAL_CAMERA_ROTATION_LOCK.vertical.max;
@@ -233,7 +235,7 @@ export class DualModelHelper {
     return controls;
   };
 
-  onWindowResize = () => {
+  private onWindowResize = () => {
     if (!this.camera1 || !this.camera2) return;
     this.camera1.aspect = window.innerWidth / 2 / window.innerHeight;
     this.camera1.updateProjectionMatrix();
@@ -300,7 +302,7 @@ export class DualModelHelper {
     }
   };
 
-  animate = () => {
+  private animate = () => {
     requestAnimationFrame(this.animate);
     this.controls1?.update();
     this.controls2?.update();
@@ -308,7 +310,7 @@ export class DualModelHelper {
     this.render();
   };
 
-  render = () => {
+  private render = () => {
     // if (!this.scene1 || !this.scene2 || !this.camera1 || !this.camera2) return;
     this.renderer1?.render(this.scene1!, this.camera1!);
     this.renderer2?.render(this.scene2!, this.camera2!);
