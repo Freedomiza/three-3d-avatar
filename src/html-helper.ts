@@ -1,5 +1,4 @@
 import { TranslationLabel } from "./models/translation-label";
-// import eyePNG from "./assets/eye.raw?raw";
 
 export const createHTMLLabel = ({
   title,
@@ -31,8 +30,9 @@ export const createHTMLLabel = ({
 export const createHTMLEyeBox = (onPointerDown: () => void) => {
   const element = document.createElement("div");
   element.className = "annotation-label-arrow";
-  // element.style.backgroundImage = `url(${eyePNG})`;
+
   element.addEventListener("pointerdown", () => onPointerDown?.());
+
   return element;
 };
 

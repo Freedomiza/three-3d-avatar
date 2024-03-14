@@ -8,6 +8,8 @@ export class LabelModel {
   arrowEl: HTMLDivElement;
   placement: string = "right";
 
+  isVisible = true;
+
   constructor(
     label: HTMLDivElement,
     eyeSprite: CSS2DObject,
@@ -93,4 +95,11 @@ export class LabelModel {
       });
     });
   };
+
+  updateVisibility(visible: boolean) {
+    const opacity = visible ? 1 : 0;
+    // this.eyeSprite.element.style.opacity = opacity.toString();
+    this.label.style.opacity = opacity.toString();
+    this.arrowEl.style.opacity = opacity.toString();
+  }
 }

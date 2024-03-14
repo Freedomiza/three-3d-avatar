@@ -3,17 +3,31 @@ import { BaseModel } from "./base-model";
 import { LabelModel } from "./label-model";
 import { TranslationLabel } from "./translation-label";
 import { updateHTMLLabel } from "../html-helper";
+// import { StaticGeometryGenerator } from "three-mesh-bvh";
+import { calculateMeshPosition } from "../model-helper";
 
 export class AnnotationModel extends BaseModel {
+  showTooltips = () => {
+    console.log("show Tooltips:" + this.title);
+  };
   label?: LabelModel;
+  camera: THREE.Mesh;
+  target: THREE.Mesh;
+  targetPosition?: THREE.Vector3;
+  cameraPosition?: THREE.Vector3;
+
   constructor(
     mesh: THREE.Mesh<
       THREE.BufferGeometry<THREE.NormalBufferAttributes>,
       THREE.Material | THREE.Material[],
       THREE.Object3DEventMap
-    >
+    >,
+    cameraMesh: THREE.Mesh,
+    targetMesh: THREE.Mesh
   ) {
     super(mesh);
+    this.camera = cameraMesh;
+    this.target = targetMesh;
   }
 
   hideLabel = () => {
@@ -43,5 +57,71 @@ export class AnnotationModel extends BaseModel {
     if (this.label) {
       updateHTMLLabel(this.label.label, data);
     }
+  };
+
+  calculatePosition = (): THREE.Vector3 => {
+    // const generator =  new StaticGeometryGenerator(this.mesh);
+    // const geometry = generator.generate();
+    // (geometry as any).computeBoundsTree();
+
+    // const position = geometry.attributes.position;
+    // const vector = new THREE.Vector3();
+
+    // vector.fromBufferAttribute(position, 0);
+    const globalVector = calculateMeshPosition(this.mesh);
+
+    this.position = globalVector;
+    this.mesh.visible = false;
+
+    //* Calculate camera and target
+    if (this.target) {
+      this.targetPosition = calculateMeshPosition(this.target);
+      this.target.visible = false;
+    }
+    if (this.camera) {
+      this.cameraPosition = calculateMeshPosition(this.camera);
+      this.camera.visible = false;
+    }
+
+    return globalVector;
+  };
+
+  // _calculateMeshPosition(obj: THREE.Mesh) {
+  //   const generator = new StaticGeometryGenerator(obj);
+  //   const geometry = generator.generate();
+  //   (geometry as any).computeBoundsTree();
+
+  //   const position = geometry.attributes.position;
+  //   const vector = new THREE.Vector3();
+
+  //   vector.fromBufferAttribute(position, 0);
+  //   const globalVector = obj.localToWorld(vector);
+  //   return globalVector;
+  // }
+
+  applyMorph = (data: number[]): void => {
+    this.mesh.morphTargetInfluences = data;
+    this.mesh.geometry.computeBoundingBox();
+    this.mesh.geometry.computeBoundingSphere();
+
+    if (this.target) {
+      this.target.morphTargetInfluences = data;
+      this.target.geometry.computeBoundingBox();
+      this.target.geometry.computeBoundingSphere();
+    }
+
+    // this.position = this._calculatePosition(this.mesh);
+  };
+
+  updateAnnotationOpacity = (camera: THREE.Camera, bodyDistance: number) => {
+    if (!this.position) return;
+
+    const pos = this.position;
+
+    const spriteDistance = camera?.position.distanceTo(pos!) ?? 0;
+
+    const spriteBehindObject = spriteDistance >= bodyDistance;
+
+    this.label?.updateVisibility(!spriteBehindObject);
   };
 }

@@ -25,17 +25,31 @@ export interface IModelTargetMapper {
   bustToWaist: number;
   waistToBellyWaist: number;
   bellyWaistToTopHip: number;
-  topHiptoHip: number;
+  topHipToHip: number;
   hipToInsideLeg: number;
   insideLegToKnee: number;
   kneeHeight: number;
   outerAnkleHeightR: number;
   male: number;
   female: number;
-  topHipIndicatorDisable: number;
+  neckIndicatorDisable: number;
+  shoulderIndicatorDisable: number;
+  backLengthIndicatorDisable: number;
+  bustIndicatorDisable: number;
+  underBustIndicatorDisable: number;
   waistIndicatorDisable: number;
-  acrossBackShoulderWidthIndicatorDisable: number;
+  hipIndicatorDisable: number;
+  thighIndicatorDisable: number;
+  calfIndicatorDisable: number;
+  upperArmIndicatorDisable: number;
+  foreArmIndicatorDisable: number;
+  outerArmLengthIndicatorDisable: number;
+  sleeveLengthIndicatorDisable: number;
+  insideLegHeightIndicatorDisable: number;
+  outsideLegHeightIndicatorDisable: number;
+  backNeckHeightIndicatorDisable: number;
 
+  //* for initial camera purpose
   heightInM: number;
 }
 
@@ -66,27 +80,41 @@ export class ModelTargetMapper implements IModelTargetMapper {
   bustToWaist: number = 0;
   waistToBellyWaist: number = 0;
   bellyWaistToTopHip: number = 0;
-  topHiptoHip: number = 0;
+  topHipToHip: number = 0;
   hipToInsideLeg: number = 0;
   insideLegToKnee: number = 0;
   kneeHeight: number = 0;
   outerAnkleHeightR: number = 0;
   male: number = 0;
   female: number = 0;
-  topHipIndicatorDisable: number = 0;
+
+  neckIndicatorDisable: number = 0;
+  shoulderIndicatorDisable: number = 0;
+  backLengthIndicatorDisable: number = 0;
+  bustIndicatorDisable: number = 0;
+  underBustIndicatorDisable: number = 0;
   waistIndicatorDisable: number = 0;
-  acrossBackShoulderWidthIndicatorDisable: number = 0;
-  height: number = 0;
+  hipIndicatorDisable: number = 0;
+  thighIndicatorDisable: number = 0;
+  calfIndicatorDisable: number = 0;
+  upperArmIndicatorDisable: number = 0;
+  foreArmIndicatorDisable: number = 0;
+  outerArmLengthIndicatorDisable: number = 0;
+  sleeveLengthIndicatorDisable: number = 0;
+  insideLegHeightIndicatorDisable: number = 0;
+  outsideLegHeightIndicatorDisable: number = 0;
+  backNeckHeightIndicatorDisable: number = 0;
+
+  heightInM: number = 0;
 
   constructor(data: IModelTargetMapper) {
     Object.assign(this, data);
   }
-  heightInM: number = 0;
+
   toArray(): number[] {
     return [
       this.muscular,
       this.bodyFat,
-      this.skinny,
       this.skinny,
       this.neckGirth,
       this.baseNeckGirth,
@@ -105,22 +133,35 @@ export class ModelTargetMapper implements IModelTargetMapper {
       this.forearmGirthR,
       this.wristGirthR,
       this.shoulderToElbowR,
-      this.forearmGirthR,
+      this.forearmLength,
       this.topToBackNeck,
       this.backNeckToBust,
       this.bustToWaist,
       this.waistToBellyWaist,
       this.bellyWaistToTopHip,
-      this.topHiptoHip,
+      this.topHipToHip,
       this.hipToInsideLeg,
       this.insideLegToKnee,
       this.kneeHeight,
       this.outerAnkleHeightR,
       this.male,
       this.female,
-      this.topHipIndicatorDisable,
+      this.neckIndicatorDisable,
+      this.shoulderIndicatorDisable,
+      this.backLengthIndicatorDisable,
+      this.bustIndicatorDisable,
+      this.underBustIndicatorDisable,
       this.waistIndicatorDisable,
-      this.acrossBackShoulderWidthIndicatorDisable,
+      this.hipIndicatorDisable,
+      this.thighIndicatorDisable,
+      this.calfIndicatorDisable,
+      this.upperArmIndicatorDisable,
+      this.foreArmIndicatorDisable,
+      this.outerArmLengthIndicatorDisable,
+      this.sleeveLengthIndicatorDisable,
+      this.insideLegHeightIndicatorDisable,
+      this.outsideLegHeightIndicatorDisable,
+      this.backNeckHeightIndicatorDisable,
     ];
   }
 }

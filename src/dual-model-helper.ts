@@ -54,8 +54,6 @@ export class DualModelHelper {
   private createDomNode = (document: Document): HTMLDivElement => {
     const dualRenderer = document.createElement("div");
     dualRenderer.classList.add("dual-renderer");
-    // dualRenderer.style.position = "absolute";
-    // dualRenderer.style.top = "0";
 
     document.body.appendChild(dualRenderer);
 
@@ -71,9 +69,6 @@ export class DualModelHelper {
 
     this.camera1 = this.setUpCamera();
     this.camera2 = this.setUpCamera();
-
-    // this.scene1.add(this.camera1);
-    // this.scene2.add(this.camera2);
 
     this.controls1 = this.setUpOrbitControl(this.camera1, this.renderer1!);
     this.controls2 = this.setUpOrbitControl(this.camera2, this.renderer2!);
@@ -93,8 +88,7 @@ export class DualModelHelper {
   private onControl1Change = () => {
     if (!this.camera1 || !this.camera2 || this.control2TimerId) return;
 
-    // Synchronize camera positions and rotations
-
+    //* Synchronize camera positions and rotations
     this.camera2.position.copy(this.camera1.position);
     this.camera2.quaternion.copy(this.camera1.quaternion);
 
@@ -110,9 +104,8 @@ export class DualModelHelper {
 
   private onControl2Change = () => {
     if (!this.camera1 || !this.camera2 || this.control1TimerId) return;
-    // console.log({ cam1: this.camera1, cam2: this.camera2 });
-    // Synchronize camera positions and rotations
 
+    //* Synchronize camera positions and rotations
     this.camera1.position.copy(this.camera2.position);
     this.camera1.quaternion.copy(this.camera2.quaternion);
 
@@ -184,7 +177,6 @@ export class DualModelHelper {
     this.domNode?.classList.add("hidden");
 
     window.removeEventListener("resize", this.onWindowResize);
-    // this.domNode.remove();
   };
 
   private unLoadScene = (scene?: THREE.Scene) => {
@@ -360,9 +352,6 @@ export class DualModelHelper {
     position: THREE.Vector3,
     target: THREE.Vector3
   ) {
-    // if (!this.camera1 || !this.controls1) return;
-    // const controls = this.controls1;
-
     // Animate the camera
     gsap.to(camera.position, {
       duration: 1, // Animation duration in seconds

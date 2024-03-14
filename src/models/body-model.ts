@@ -1,37 +1,41 @@
 import * as THREE from "three";
 import { BaseModel } from "./base-model";
-import maleBody from "../assets/male-body.txt?raw";
-import femaleBody from "../assets/female-body.txt?raw";
+import { loadTextures } from "../model-helper";
+
+// console.log({
+//   meshBody,
+// });
+
+export enum BodyType {
+  male,
+  female,
+  mesh,
+}
 
 export default class BodyModel extends BaseModel {
+  bodyType: BodyType = BodyType.male;
+
   declare morphTargetDictionary?: BodyMeasurementIndices;
 
   toggleWireFrame = (value: boolean) => {
     if (this.mesh?.material) {
       const material = this.mesh?.material as THREE.MeshStandardMaterial;
-      material.wireframe = value;
+
+      // material.wireframe = value;
+      if (value) {
+        const mat = loadTextures(BodyType.mesh);
+        this.applySkinTexture(mat);
+      } else {
+        this.applySkinTexture(loadTextures(this.bodyType));
+      }
       material.needsUpdate = true;
     }
   };
 
-  loadTextures = (isMale: boolean): THREE.MeshStandardMaterial => {
-    let skinTexture: THREE.Texture;
-    if (isMale) {
-      skinTexture = new THREE.TextureLoader().load(maleBody);
-    } else {
-      skinTexture = new THREE.TextureLoader().load(femaleBody);
-    }
-
-    skinTexture.mapping = THREE.UVMapping;
-    // skinTexture.flipY = false;
-    const me0 = new THREE.MeshStandardMaterial({
-      map: skinTexture,
-      // wireframe: true,
-      emissive: new THREE.Color(0xffffff),
-      emissiveMap: skinTexture,
-    });
-
-    return me0;
+  setGender = (isMale: boolean) => {
+    this.bodyType = isMale ? BodyType.male : BodyType.female;
+    const mat = loadTextures(this.bodyType);
+    this.applySkinTexture(mat);
   };
 
   clone: () => BodyModel = () => {
