@@ -276,12 +276,11 @@ export class DualModelHelper {
         });
 
         //skin
-        const mat = this.bodyModel1.loadTextures(isMale);
-        this.bodyModel1.applySkinTexture(mat);
+        this.bodyModel1.setGender(isMale);
         this.scene1?.add(this.bodyModel1!.mesh);
 
         this.bodyModel2 = this.bodyModel1.clone();
-        this.bodyModel2.applySkinTexture(mat.clone());
+        this.bodyModel2.setGender(isMale);
         this.scene2?.add(this.bodyModel2!.mesh);
 
         updateMorphTargets(params2, {
