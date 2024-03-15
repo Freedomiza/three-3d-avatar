@@ -7,9 +7,6 @@ import { updateHTMLLabel } from "../html-helper";
 import { calculateMeshPosition } from "../model-helper";
 
 export class AnnotationModel extends BaseModel {
-  showTooltips = () => {
-    console.log("show Tooltips:" + this.title);
-  };
   label?: LabelModel;
   camera: THREE.Mesh;
   target: THREE.Mesh;
@@ -31,27 +28,17 @@ export class AnnotationModel extends BaseModel {
   }
 
   hideLabel = () => {
-    if (this.label) {
-      this.label.label.classList.add("hidden");
-      this.label.arrowEl.classList.add("hidden");
-    }
+    this.label?.hide();
   };
 
   showLabel = () => {
-    if (this.label) {
-      this.label.label.classList.remove("hidden");
-      this.label.arrowEl.classList.remove("hidden");
-    }
+    this.label?.show();
   };
   showEye = () => {
-    if (this.label) {
-      this.label.eyeSprite.visible = true;
-    }
+    this.label?.toggleEye(true);
   };
   hideEye = () => {
-    if (this.label) {
-      this.label.eyeSprite.visible = false;
-    }
+    this.label?.toggleEye(false);
   };
   updateLabelContent = (data: TranslationLabel) => {
     if (this.label) {
@@ -60,14 +47,6 @@ export class AnnotationModel extends BaseModel {
   };
 
   calculatePosition = (): THREE.Vector3 => {
-    // const generator =  new StaticGeometryGenerator(this.mesh);
-    // const geometry = generator.generate();
-    // (geometry as any).computeBoundsTree();
-
-    // const position = geometry.attributes.position;
-    // const vector = new THREE.Vector3();
-
-    // vector.fromBufferAttribute(position, 0);
     const globalVector = calculateMeshPosition(this.mesh);
 
     this.position = globalVector;
@@ -86,19 +65,6 @@ export class AnnotationModel extends BaseModel {
     return globalVector;
   };
 
-  // _calculateMeshPosition(obj: THREE.Mesh) {
-  //   const generator = new StaticGeometryGenerator(obj);
-  //   const geometry = generator.generate();
-  //   (geometry as any).computeBoundsTree();
-
-  //   const position = geometry.attributes.position;
-  //   const vector = new THREE.Vector3();
-
-  //   vector.fromBufferAttribute(position, 0);
-  //   const globalVector = obj.localToWorld(vector);
-  //   return globalVector;
-  // }
-
   applyMorph = (data: number[]): void => {
     this.mesh.morphTargetInfluences = data;
     this.mesh.geometry.computeBoundingBox();
@@ -109,8 +75,6 @@ export class AnnotationModel extends BaseModel {
       this.target.geometry.computeBoundingBox();
       this.target.geometry.computeBoundingSphere();
     }
-
-    // this.position = this._calculatePosition(this.mesh);
   };
 
   updateAnnotationOpacity = (camera: THREE.Camera, bodyDistance: number) => {
@@ -123,5 +87,8 @@ export class AnnotationModel extends BaseModel {
     const spriteBehindObject = spriteDistance >= bodyDistance;
 
     this.label?.updateVisibility(!spriteBehindObject);
+  };
+  showTooltips = () => {
+    console.log("show Tooltips:" + this.title);
   };
 }

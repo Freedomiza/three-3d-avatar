@@ -30,8 +30,8 @@
   "insideLegToKnee": 0.655,
   "kneeHeight": 0.661290322580645,
   "outerAnkleHeightR": 0.775,
-  "male": 1,
-  "female": 0,
+  "male": 0,
+  "female": 1,
 
   "neckIndicatorDisable": 1,
   "shoulderIndicatorDisable": 1,

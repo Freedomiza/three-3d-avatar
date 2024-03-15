@@ -38,8 +38,7 @@ export class LabelModel {
     const padding = this.padding;
     const placement = this.placement;
 
-    if (!startDiv) return;
-    if (!tooltips) return;
+    if (!startDiv || !tooltips) return;
 
     computePosition(startDiv, arrowEl, {
       middleware: [
@@ -97,9 +96,22 @@ export class LabelModel {
   };
 
   updateVisibility(visible: boolean) {
-    const opacity = visible ? 1 : 0;
-    // this.eyeSprite.element.style.opacity = opacity.toString();
-    this.label.style.opacity = opacity.toString();
-    this.arrowEl.style.opacity = opacity.toString();
+    const opacity = (visible ? 1 : 0.4).toString();
+    this.eyeSprite.element.style.opacity = opacity;
+    this.label.style.opacity = opacity;
+    this.arrowEl.style.opacity = opacity;
   }
+
+  hide = () => {
+    this.label.classList.add("hidden");
+    this.arrowEl.classList.add("hidden");
+  };
+  show = () => {
+    this.label.classList.remove("hidden");
+    this.arrowEl.classList.remove("hidden");
+  };
+
+  toggleEye = (value: boolean) => {
+    this.eyeSprite.visible = value;
+  };
 }

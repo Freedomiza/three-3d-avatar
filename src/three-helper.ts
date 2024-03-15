@@ -19,7 +19,7 @@ import { IModelTargetMapper } from "./models/model-mapper";
 import BodyModel from "./models/body-model";
 import { LabelModel } from "./models/label-model";
 import { AnnotationModel } from "./models/annotation-model";
-import { createHTMLEyeBox, createHTMLLabel } from "./html-helper";
+import { createHTMLEyeBox, createHTMLLabel, debounce } from "./html-helper";
 
 import annotationConfig from "./assets/annotation-config.json";
 import {
@@ -143,11 +143,11 @@ export class ThreeJSHelper {
     const meshDistance = this.camera.position.distanceTo(
       this.getCenterTarget()
     );
-    // console.log(meshDistance);
-    if (meshDistance < 1.0) {
+    console.log(meshDistance);
+    if (meshDistance < 2) {
       this.hideAllLabels();
     } else {
-      if (this._renderMode == RenderMode.FullBody) {
+      if (meshDistance > 2.5 && this._renderMode == RenderMode.FullBody) {
         this.showAllLabels();
       }
     }
@@ -547,7 +547,7 @@ export class ThreeJSHelper {
     };
 
     const labelDiv = createHTMLLabel({
-      title: label,
+      title: foundConfig?.label ?? label,
       value: "43.3cm",
       position: offsetPosition,
       onPointerDown: moveToPart,
@@ -566,6 +566,7 @@ export class ThreeJSHelper {
     //* Compute position
     const labelModel = new LabelModel(labelDiv, startObject, offsetPosition);
     labelModel.updatePosition();
+
     return labelModel;
   };
 
@@ -677,4 +678,6 @@ export class ThreeJSHelper {
   lockCamera: () => void = () => {
     if (this.controls) this.controls.enabled = false;
   };
+
+  debouncedResetCheck = debounce(this.resetView, 300);
 }

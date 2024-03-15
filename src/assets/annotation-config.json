@@ -1,6 +1,7 @@
 [
   {
     "name": "hip",
+    "label": "Hip",
     "position": "right",
     "offset": -0.6,
     "indicator": "hipIndicatorDisable",
@@ -15,6 +16,7 @@
 
   {
     "name": "knee",
+    "label": "Knee",
     "position": "right",
     "offset": -0.6,
     "camera": {
@@ -27,11 +29,13 @@
   },
   {
     "name": "neck",
+    "label": "Neck",
     "position": "left",
     "indicator": "neckIndicatorDisable"
   },
   {
     "name": "bust",
+    "label": "Bust",
     "position": "left",
     "indicator": "bustIndicatorDisable",
     "camera": {
@@ -44,33 +48,38 @@
   },
   {
     "name": "waist",
+    "label": "Waist",
     "position": "left",
     "indicator": "waistIndicatorDisable"
   },
   {
     "name": "thigh",
+    "label": "Thigh",
     "position": "left",
     "indicator": "thighIndicatorDisable"
   },
   {
     "name": "calf",
+    "label": "Calf",
     "position": "right",
     "indicator": "calfIndicatorDisable"
   },
   {
     "name": "shoulder",
+    "label": "Shoulder",
     "position": "right",
     "indicator": "shoulderIndicatorDisable",
     "camera": {
       "position": {
-        "x": 0.8,
+        "x": 1,
         "y": 1.9,
-        "z": -0.7
+        "z": -1
       }
     }
   },
   {
     "name": "upperarm",
+    "label": "Upper arm",
     "position": "right",
     "indicator": "upperArmIndicatorDisable",
     "camera": {

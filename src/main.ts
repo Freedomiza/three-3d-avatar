@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     resetAll();
     await await singleView.init(document);
     singleView.loadModel(
-      true,
+      false,
       testParams,
       modelData,
       onLoadModelCompeted,
