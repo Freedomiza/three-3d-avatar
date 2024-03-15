@@ -143,7 +143,7 @@ export class ThreeJSHelper {
     const meshDistance = this.camera.position.distanceTo(
       this.getCenterTarget()
     );
-    console.log(meshDistance);
+    // console.log(meshDistance);
     if (meshDistance < 2) {
       this.hideAllLabels();
     } else {
