@@ -4,6 +4,7 @@ import { createHtmlPlugin } from "vite-plugin-html";
 import path from "path";
 import fonts from "./src/assets/inter-font.json";
 export default defineConfig({
+  base: "/three-3d-avatar/",
   // assetsInclude: ['**/*.gltf'],
   resolve: {
     alias: {
