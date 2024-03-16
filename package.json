@@ -22,7 +22,9 @@
   },
   "dependencies": {
     "@floating-ui/dom": "^1.6.3",
+    "build": "^0.1.4",
     "gsap": "^3.12.5",
+    "run": "^1.5.0",
     "three": "^0.157.0",
     "three-mesh-bvh": "^0.7.3"
   }
