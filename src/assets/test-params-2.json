@@ -49,6 +49,5 @@
   "sleeveLengthIndicatorDisable": 1,
   "insideLegHeightIndicatorDisable": 1,
   "outsideLegHeightIndicatorDisable": 1,
-  "backNeckHeightIndicatorDisable": 1,
-  "heightInM": 1.7
+  "backNeckHeightIndicatorDisable": 1
 }

@@ -37,8 +37,18 @@ export class LabelModel {
     const arrowEl = this.arrowEl;
     const padding = this.padding;
     const placement = this.placement;
+    // console.log("re-render");
 
     if (!startDiv || !tooltips) return;
+    // console.log({ startDiv });
+    // if (
+    //   tooltips.classList.contains("hidden") ||
+    //   arrowEl.classList.contains("hidden")
+    // ) {
+    //   console.log("element hidden");
+    //   // console.log(startDiv);
+    //   return;
+    // }
 
     computePosition(startDiv, arrowEl, {
       middleware: [
@@ -68,26 +78,21 @@ export class LabelModel {
       });
     });
 
-    computePosition(
-      startDiv,
-      tooltips,
-
-      {
-        middleware: [
-          offset({
-            mainAxis: window.innerWidth / 2,
-            // crossAxis: 10,
-          }),
-          shift({
-            mainAxis: false,
-            crossAxis: true,
-            padding: 15,
-          }),
-        ],
-        placement: placement === "right" ? "right" : "left",
-        strategy: "absolute",
-      }
-    ).then(({ x, y }) => {
+    computePosition(startDiv, tooltips, {
+      middleware: [
+        offset({
+          mainAxis: window.innerWidth / 2,
+          // crossAxis: 10,
+        }),
+        shift({
+          mainAxis: false,
+          crossAxis: true,
+          padding: 15,
+        }),
+      ],
+      placement: placement === "right" ? "right" : "left",
+      strategy: "absolute",
+    }).then(({ x, y }) => {
       Object.assign(tooltips.style, {
         left: `${x}px`,
         top: `${y}px`,
@@ -102,11 +107,16 @@ export class LabelModel {
     this.arrowEl.style.opacity = opacity;
   }
 
+  _hidden: boolean = false;
   hide = () => {
+    if (this._hidden === true) return;
+    this._hidden = true;
+
     this.label.classList.add("hidden");
     this.arrowEl.classList.add("hidden");
   };
   show = () => {
+    this._hidden = false;
     this.label.classList.remove("hidden");
     this.arrowEl.classList.remove("hidden");
   };

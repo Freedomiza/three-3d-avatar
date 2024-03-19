@@ -3,7 +3,7 @@
   "bodyFat": 0.0,
   "skinny": 0.0,
   "neckGirth": 0.5,
-  "baseNeckGirth": 0.5,
+  "neckBaseGirth": 0.5,
   "acrossBackShoulderWidth": 0.7,
   "breastSize": 0.5,
   "underBustGirth": 0.5,
@@ -50,5 +50,7 @@
   "insideLegHeightIndicatorDisable": 1,
   "outsideLegHeightIndicatorDisable": 1,
   "backNeckHeightIndicatorDisable": 1,
-  "heightInM": 1.7
+  "height": 1.7,
+  "weight": 70
+  
 }

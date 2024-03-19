@@ -5,6 +5,7 @@ import { TranslationLabel } from "./translation-label";
 import { updateHTMLLabel } from "../html-helper";
 // import { StaticGeometryGenerator } from "three-mesh-bvh";
 import { calculateMeshPosition } from "../model-helper";
+import { IMeasurementData } from "./base";
 
 export class AnnotationModel extends BaseModel {
   label?: LabelModel;
@@ -12,6 +13,7 @@ export class AnnotationModel extends BaseModel {
   target: THREE.Mesh;
   targetPosition?: THREE.Vector3;
   cameraPosition?: THREE.Vector3;
+  measurement?: IMeasurementData;
 
   constructor(
     mesh: THREE.Mesh<

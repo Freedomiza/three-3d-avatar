@@ -21,7 +21,11 @@ export class BaseModel {
   }
 
   applyMorph = (data: number[]): void => {
-    this.mesh.morphTargetInfluences = data;
+    // this.mesh.updateMorphTargets();
+
+    // console.log("Base: " + this.mesh.morphTargetInfluences?.toString());
+    // console.log("Target: " + data.toString());
+    this.mesh.morphTargetInfluences = structuredClone(data);
     this.mesh.geometry.computeBoundingBox();
     this.mesh.geometry.computeBoundingSphere();
 

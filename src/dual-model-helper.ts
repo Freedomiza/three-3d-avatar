@@ -10,10 +10,10 @@ import {
   INITIAL_DUAL_CAMERA_POSITION,
 } from "./config";
 import BodyModel from "./models/body-model";
-import { IModelTargetMapper } from "./models/model-mapper";
+import { IModelTargetMapper } from "./models/base";
 import {
   filterBodyModelFromList,
-  getAvg,
+  // getAvg,
   updateMorphTargets,
 } from "./model-helper";
 
@@ -291,7 +291,7 @@ export class DualModelHelper {
         this.scene1?.updateMatrixWorld(true);
         this.animate();
 
-        this.bodyHeight = getAvg(params1.heightInM, params2.heightInM) ?? 0.5;
+        // this.bodyHeight = getAvg(params1.height, params2.height) ?? 0.5;
 
         callback?.();
       };

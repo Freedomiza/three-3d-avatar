@@ -1,3 +1,4 @@
+import { IMeasurementData } from "./models/base";
 import { TranslationLabel } from "./models/translation-label";
 
 export const createHTMLLabel = ({
@@ -65,4 +66,28 @@ export function debounce<Params extends any[]>(
       func(...args);
     }, timeout);
   };
+}
+
+export function convert(measurement: IMeasurementData, unit: string) {
+  //measurement in mm
+  const { value } = measurement;
+  switch (unit) {
+    case "cm":
+      return value * 0.1;
+    case "feet":
+      return value / 304.8;
+    case "inches":
+      return value / 25.4;
+    default:
+      return value;
+  }
+}
+
+export function formatMeasurement(
+  measurement?: IMeasurementData,
+  unit: string = "cm",
+  precision: number = 1
+) {
+  if (!measurement) return "";
+  return `${convert(measurement, unit).toFixed(precision)} ${unit}`;
 }

@@ -1,25 +1,23 @@
 import { gsap } from "gsap";
 import * as THREE from "three";
-import {
-  MeshBVHHelper,
-  StaticGeometryGenerator,
-  acceleratedRaycast,
-  computeBoundsTree,
-  disposeBoundsTree,
-} from "three-mesh-bvh";
+
 import { GLTF, GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import {
   CSS2DObject,
   CSS2DRenderer,
 } from "three/addons/renderers/CSS2DRenderer.js";
 
-import { IModelTargetMapper } from "./models/model-mapper";
+import { IMeasurementData, IModelTargetMapper } from "./models/base";
 import BodyModel from "./models/body-model";
 import { LabelModel } from "./models/label-model";
 import { AnnotationModel } from "./models/annotation-model";
-import { createHTMLEyeBox, createHTMLLabel, debounce } from "./html-helper";
+import {
+  createHTMLEyeBox,
+  createHTMLLabel,
+  debounce,
+  formatMeasurement,
+} from "./html-helper";
 
 import annotationConfig from "./assets/annotation-config.json";
 import {
@@ -34,15 +32,11 @@ import {
   filterAnnotationFromList,
   filterBodyModelFromList,
   findBodyIndicatorFromList,
+  findMeasurementByTitle,
   getConfigPosition,
   updateMorphTargets,
 } from "./model-helper";
 import { BodyIndicator } from "./models/body-indicator";
-
-//* Add the extension functions
-THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
-THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
-THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 declare global {
   interface Window {
@@ -67,10 +61,10 @@ export class ThreeJSHelper {
 
   private domNode?: HTMLDivElement;
 
-  private meshHelper?: THREE.Mesh;
+  // private meshHelper?: THREE.Mesh;
 
-  private staticGeometryGenerator?: StaticGeometryGenerator;
-  private bvhHelper?: MeshBVHHelper;
+  // private staticGeometryGenerator?: StaticGeometryGenerator;
+  // private bvhHelper?: MeshBVHHelper;
   private controls?: OrbitControls;
   annotationModels: AnnotationModel[] = [];
   bodyIndicator?: BodyIndicator;
@@ -110,50 +104,99 @@ export class ThreeJSHelper {
   };
   init = async (document: Document) => {
     // this.document = document;
+    // gsap.ticker.fps(24);
+    return new Promise((res, rej) => {
+      this.domNode = this.createDomNode(document);
+      // Setup render
+      this.renderer = this.setUpRenderer(this.domNode);
 
-    this.domNode = this.createDomNode(document);
-    // Setup render
-    this.renderer = this.setUpRenderer(this.domNode);
+      // Set up scene
+      this.scene = this.setUpScene();
+      // Set up camera
+      this.camera = this.setUpCamera();
+      this.scene.add(this.camera);
 
-    // Set up scene
-    this.scene = this.setUpScene();
-    // Set up camera
-    this.camera = this.setUpCamera();
-    this.scene.add(this.camera);
+      // Set up label Renderer
+      this.labelRenderer = this.setupLabelRenderer(this.domNode);
+      // Setup controls
+      this.controls = this.setUpOrbitControl(this.camera, this.labelRenderer);
 
-    // Set up label Renderer
-    this.labelRenderer = this.setupLabelRenderer(this.domNode);
-    // Setup controls
-    this.controls = this.setUpOrbitControl(this.camera, this.labelRenderer);
+      this.controls.addEventListener("change", this.onControlChanged);
 
-    this.controls.addEventListener("change", this.onControlChanged);
-
-    window.camera = this.camera;
-    this._renderMode = RenderMode.FullBody;
-    this.domNode.classList.add("hidden");
+      window.camera = this.camera;
+      this._renderMode = RenderMode.FullBody;
+      // this.domNode.classList.add("hidden");
+      setTimeout(() => {
+        console.log("Delaying render...");
+        res(true);
+      }, 300);
+    });
   };
 
   getCenterTarget = () => {
     return new THREE.Vector3(0, this.cameraHeight, 0);
   };
 
+  isMovingId?: number;
+  startZoom?: number;
+
   onControlChanged = () => {
     if (!this.camera) return;
     // TODO: add more controller here if possible
-    const meshDistance = this.camera.position.distanceTo(
-      this.getCenterTarget()
-    );
-    // console.log(meshDistance);
+    // const meshDistance = this.camera.position.distanceTo(
+    //   this.getCenterTarget()
+    // );
+    // // console.log(meshDistance);
+    // if (meshDistance < 2) {
+    //   this.hideAllLabels();
+    // } else {
+    //   if (meshDistance > 2.5 && this._renderMode == RenderMode.FullBody) {
+    //     this.showAllLabels();
+    //   }
+    // }
+
+    // this.updateAnnotationOpacity();
+
+    if (this.isMovingId) {
+      clearTimeout(this.isMovingId);
+    } else {
+      this.hideAllLabels();
+      this.startZoom = this.camera.position.distanceTo(this.getCenterTarget());
+    }
+
+    this.isMovingId = setTimeout(() => {
+      this.isMovingId = undefined;
+      this.updateAnnotationOpacity();
+      this.checkLabelShouldVisible();
+      this.startZoom = undefined;
+      this.render();
+    }, 300);
+  };
+
+  cameraMax = 3.0;
+
+  checkLabelShouldVisible = () => {
+    if (!this.camera) return;
+    const camera = this.camera!;
+    const meshDistance = camera.position.distanceTo(this.getCenterTarget());
+    // console.log({ meshDistance });
     if (meshDistance < 2) {
       this.hideAllLabels();
     } else {
-      if (meshDistance > 2.5 && this._renderMode == RenderMode.FullBody) {
-        this.showAllLabels();
+      this.showAllLabels();
+      this.showAllEyes();
+      if (meshDistance >= this.cameraMax) {
+        this._renderMode = RenderMode.FullBody;
+        // this.showAllLabels();
+        // this.showAllEyes();
+        // console.log(this.startZoom);
+
+        if (this.startZoom && this.startZoom < meshDistance - 0.15) {
+          this.resetCameraCenter();
+          // this.resetView();
+        }
       }
     }
-
-    this.updateAnnotationOpacity();
-    this.render();
   };
 
   setUpScene = (): THREE.Scene => {
@@ -165,10 +208,11 @@ export class ThreeJSHelper {
 
   generateAnnotations: (
     models: FilterAnnotationFromListResult[]
-  ) => AnnotationModel[] = (mesh: FilterAnnotationFromListResult[]) => {
+  ) => AnnotationModel[] = (mesh) => {
     const result: AnnotationModel[] = [];
     mesh.forEach((el) => {
       const annotation = new AnnotationModel(el.model, el.camera, el.target);
+      // console.log({ annotation });
       result.push(annotation);
     });
 
@@ -205,7 +249,7 @@ export class ThreeJSHelper {
 
     // Animate the camera
     gsap.to(this.camera.position, {
-      duration: 1, // Animation duration in seconds
+      duration: 0.7, // Animation duration in seconds
       x: position.x,
       y: position.y,
       z: position.z,
@@ -216,12 +260,12 @@ export class ThreeJSHelper {
 
     // Animate the camera
     gsap.to(controls.target, {
-      duration: 1, // Animation duration in seconds
+      duration: 0.7, // Animation duration in seconds
       x: target.x,
       y: target.y,
       z: target.z,
       onUpdate: () => {
-        controls.update(); // Important: Update OrbitControls
+        // controls.update(); // Important: Update OrbitControls
       },
       onComplete: callBack,
     });
@@ -269,12 +313,12 @@ export class ThreeJSHelper {
       el.label?.updatePosition();
     });
 
-    const meshDistance =
-      this.camera?.position.distanceTo(this.bodyModel!.mesh!.position) ?? 0;
+    // const meshDistance =
+    //   this.camera?.position.distanceTo(this.bodyModel!.mesh!.position) ?? 0;
 
-    this.annotationModels.forEach((el) => {
-      el.updateAnnotationOpacity(this.camera!, meshDistance);
-    });
+    // this.annotationModels.forEach((el) => {
+    //   el.updateAnnotationOpacity(this.camera!, meshDistance);
+    // });
   };
 
   updateMorphTargets = (params: IModelTargetMapper) => {
@@ -322,24 +366,25 @@ export class ThreeJSHelper {
 
   loadModel = (
     isMale: boolean,
+    // height: number,
     params: IModelTargetMapper,
-    modelData: string,
+    measurementData: IMeasurementData[],
+    objData: string,
     callback?: () => void,
     onError: (error: any) => void = () => {}
   ) => {
     this.domNode?.classList.remove("hidden");
     this._morphs = params;
+    // console.log("morph: " + JSON.stringify(params));
     try {
-      const objData = modelData;
-
       //dracoLoader loader
-      const dracoLoader = new DRACOLoader();
-      dracoLoader.setDecoderPath(
-        "https://unpkg.com/three@0.154.x/examples/jsm/libs/draco/gltf/"
-      ); // use a full url path
+      // const dracoLoader = new DRACOLoader();
+      // dracoLoader.setDecoderPath(
+      //   "https://unpkg.com/three@0.154.x/examples/jsm/libs/draco/gltf/"
+      // ); // use a full url path
 
       const loader = new GLTFLoader();
-      loader.setDRACOLoader(dracoLoader);
+      // loader.setDRACOLoader(dracoLoader);
 
       const onLoad = (result: GLTF) => {
         if (!this.scene || !this.domNode) return;
@@ -354,7 +399,7 @@ export class ThreeJSHelper {
           this.bodyIndicator.calculatePosition();
           this.bodyIndicator.loadTextures(LINE_COLOR);
         }
-        console.log({ modelsPairs, children: result.scene.children });
+        // console.log("Update model morph");
 
         updateMorphTargets(params, {
           bodyModel: this.bodyModel,
@@ -367,6 +412,11 @@ export class ThreeJSHelper {
 
         this.annotationModels.forEach((el) => {
           el.calculatePosition();
+
+          const measurement = findMeasurementByTitle(measurementData, el.title);
+          // console.log({ el: el.title, measurement });
+          if (measurement) el.measurement = measurement;
+
           el.label = this.createLabel(el, el.position!, this.scene!);
         });
 
@@ -379,55 +429,56 @@ export class ThreeJSHelper {
           this.cameraHeight = y - 0.4;
         }
 
+        // this.regenerateMesh();
+        // const axesHelper = new THREE.AxesHelper(2);
+        // axesHelper.visible = false;
+        // this.scene.add(axesHelper);
         this.scene.add(...result.scene.children);
 
-        this.regenerateMesh();
+        // this.regenerateMesh();
 
         this.camera?.updateMatrixWorld();
-
-        const axesHelper = new THREE.AxesHelper(2);
-        axesHelper.visible = true;
-        this.scene.add(axesHelper);
 
         this.animate();
 
         // this.cameraHeight = params.heightInM ?? 0.5;
+
         callback?.();
       };
 
-      loader.parse(objData, "", onLoad);
+      loader.parse(objData, "", onLoad, (event: ErrorEvent) => {
+        console.log("event: " + JSON.stringify(event));
+        onError && onError(event);
+      });
     } catch (err) {
       onError && onError(err);
     }
   };
 
   regenerateMesh = () => {
-    const meshHelper = this.meshHelper;
-    if (meshHelper) {
-      // let generateTime, refitTime, startTime;
-
-      // time the geometry generation
-      // startTime = window.performance.now();
-      this.staticGeometryGenerator?.generate(meshHelper.geometry);
-      // generateTime = window.performance.now() - startTime;
-
-      // time the bvh refitting
-      // startTime = window.performance.now();
-      if (!(meshHelper.geometry as any).boundsTree) {
-        (meshHelper.geometry as any).computeBoundsTree();
-        // refitTime = "-";
-      } else {
-        (meshHelper.geometry as any).boundsTree.refit();
-        // refitTime = (window.performance.now() - startTime).toFixed(2);
-      }
-
-      this.bvhHelper?.update();
-    }
+    // const meshHelper = this.meshHelper;
+    // if (meshHelper) {
+    //   // let generateTime, refitTime, startTime;
+    //   // time the geometry generation
+    //   // startTime = window.performance.now();
+    //   this.staticGeometryGenerator?.generate(meshHelper.geometry);
+    //   // generateTime = window.performance.now() - startTime;
+    //   // time the bvh refitting
+    //   // startTime = window.performance.now();
+    //   if (!(meshHelper.geometry as any).boundsTree) {
+    //     (meshHelper.geometry as any).computeBoundsTree();
+    //     // refitTime = "-";
+    //   } else {
+    //     (meshHelper.geometry as any).boundsTree.refit();
+    //     // refitTime = (window.performance.now() - startTime).toFixed(2);
+    //   }
+    //   // this.bvhHelper?.update();
+    // }
   };
 
   animate = () => {
     requestAnimationFrame(this.animate);
-    this.controls?.update();
+    // this.controls?.update();
     this.render();
   };
 
@@ -491,9 +542,11 @@ export class ThreeJSHelper {
 
   moveToPart = (el: AnnotationModel) => {
     this._renderMode = RenderMode.Detail;
+    this.showAllEyes();
     this.hideAllLabels();
     el.hideEye();
     el.showTooltips();
+
     const position = el.position ?? new THREE.Vector3();
     const foundConfig = this.findAnnotationConfig(el);
 
@@ -504,26 +557,36 @@ export class ThreeJSHelper {
     const targetPos = el.targetPosition ?? position;
     if (foundConfig?.indicator) {
       let interp = {
-        [`${foundConfig.indicator}`]: 1,
-      };
-
-      gsap.to(interp, {
         [`${foundConfig.indicator}`]: 0,
-        duration: 1, // 1-second duration
-        onUpdate: () => {
-          updateMorphTargets(
-            {
-              ...this._morphs!,
-              ...interp,
-            },
-            {
-              // bodyModel: this.bodyModel,
-
-              indicator: this.bodyIndicator,
-            }
-          );
+      };
+      updateMorphTargets(
+        {
+          ...this._morphs!,
+          ...interp,
         },
-      });
+        {
+          // bodyModel: this.bodyModel,
+          indicator: this.bodyIndicator,
+        }
+      );
+
+      // gsap.to(interp, {
+      //   [`${foundConfig.indicator}`]: 0,
+      //   duration: 1, // 1-second duration
+      //   onUpdate: () => {
+      //     updateMorphTargets(
+      //       {
+      //         ...this._morphs!,
+      //         ...interp,
+      //       },
+      //       {
+      //         // bodyModel: this.bodyModel,
+
+      //         indicator: this.bodyIndicator,
+      //       }
+      //     );
+      //   },
+      // });
     }
 
     this.moveCamera(cameraPos, targetPos);
@@ -548,7 +611,8 @@ export class ThreeJSHelper {
 
     const labelDiv = createHTMLLabel({
       title: foundConfig?.label ?? label,
-      value: "43.3cm",
+      // TODO: set value here
+      value: formatMeasurement(el.measurement),
       position: offsetPosition,
       onPointerDown: moveToPart,
     });
@@ -579,6 +643,32 @@ export class ThreeJSHelper {
   showAllLabels: () => void = () => {
     this.annotationModels.forEach((el) => {
       el.showLabel();
+    });
+  };
+
+  resetCameraCenter = () => {
+    const controls = this.controls!;
+    const target = new THREE.Vector3(
+      INITIAL_CAMERA_TARGET.x,
+      this.cameraHeight,
+      INITIAL_CAMERA_TARGET.z
+    );
+
+    updateMorphTargets(this._morphs!, {
+      bodyModel: this.bodyModel,
+      annotationModels: this.annotationModels,
+      indicator: this.bodyIndicator,
+    });
+
+    // Animate the camera
+    gsap.to(controls.target, {
+      duration: 0.66, // Animation duration in seconds
+      x: target.x,
+      y: target.y,
+      z: target.z,
+      onUpdate: () => {
+        controls.update(); // Important: Update OrbitControls
+      },
     });
   };
 

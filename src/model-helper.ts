@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import BodyModel, { BodyType } from "./models/body-model";
-import { IModelTargetMapper, ModelTargetMapper } from "./models/model-mapper";
+import { ModelTargetMapper } from "./models/model-mapper";
 import { AnnotationModel } from "./models/annotation-model";
 import { BodyIndicator } from "./models/body-indicator";
 import maleBody from "./assets/male-body.txt?raw";
@@ -9,7 +9,16 @@ import femaleBody from "./assets/female-body.txt?raw";
 import meshBody from "./assets/mesh-body.txt?raw";
 
 import { LINE_COLOR } from "./config";
-import { StaticGeometryGenerator } from "three-mesh-bvh";
+import {
+  StaticGeometryGenerator,
+  computeBoundsTree,
+  disposeBoundsTree,
+} from "three-mesh-bvh";
+import { IMeasurementData, IModelTargetMapper } from "./models/base";
+//* Add the extension functions
+THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+// THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 export const filterBodyModelFromList = (
   list: THREE.Object3D<THREE.Object3DEventMap>[]
@@ -74,7 +83,8 @@ export const updateMorphTargets = (
   }
 ) => {
   const values = new ModelTargetMapper(params).toArray();
-
+  // console.log("===> updateMorphTargets");
+  // console.log(values.toString());
   if (values) {
     bodyModel?.applyMorph(values);
     indicator?.applyMorph(values);
@@ -117,10 +127,9 @@ export const findBodyIndicatorFromList = (
   return found as THREE.Mesh;
 };
 
-export const loadTextures = (
-  bodyType: BodyType = BodyType.male
-): THREE.Material => {
+export const loadTextures = (bodyType = BodyType.male): THREE.Material => {
   let skinTexture: THREE.Texture;
+  console.log("Load body texture:" + bodyType);
   switch (bodyType) {
     case BodyType.male:
       skinTexture = new THREE.TextureLoader().load(maleBody);
@@ -172,3 +181,16 @@ export const calculateMeshPosition = (obj: THREE.Mesh) => {
   const globalVector = obj.localToWorld(vector);
   return globalVector;
 };
+
+export function findMeasurementByTitle(
+  measurementData: IMeasurementData[],
+  title: string
+) {
+  const matchStr = title?.toLowerCase().split("annotation")?.[0] ?? title;
+  if (matchStr) {
+    // console.log(matchStr);
+    return measurementData.find((el) =>
+      el.name?.toLowerCase()?.startsWith(matchStr)
+    );
+  }
+}
