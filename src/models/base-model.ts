@@ -19,6 +19,10 @@ export class BaseModel {
     this.scale = mesh.scale;
     this.title = mesh.name;
   }
+  dispose = () => {
+    this.mesh.remove();
+    this._mat = undefined;
+  };
 
   applyMorph = (data: number[]): void => {
     // this.mesh.updateMorphTargets();

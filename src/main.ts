@@ -4,6 +4,7 @@ import { IMeasurementData, IModelTargetMapper } from "./models/base";
 import { DualModelHelper } from "./dual-model-helper";
 import { ThreeJSHelper } from "./three-helper";
 import testParams from "./assets/test-params.json";
+import testMeasurementData from "./assets/test-measurement.json";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const singleView: ThreeJSHelper = new ThreeJSHelper();
@@ -62,9 +63,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       backNeckHeightIndicatorDisable: 1,
     };
     await singleView.init(document);
-    console.log({
-      rawData,
-    });
+    // console.log({
+    //   rawData,
+    // });
     const request = {
       ...baseParams,
       ...params,
@@ -106,7 +107,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       false,
       // 1700,
       testParams,
-      [],
+      testMeasurementData,
       modelData,
       onLoadModelCompeted,
       onLoadModelError
@@ -123,7 +124,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.FlutterChannelReady.postMessage("Hello from JavaScript!");
   }
 
-  // loadDummyModel();
+  loadDummyModel();
 
   // loadDualDummyModel();
 

@@ -29,6 +29,12 @@ export class AnnotationModel extends BaseModel {
     this.target = targetMesh;
   }
 
+  remove = () => {
+    this.label?.remove();
+    this.camera?.remove();
+    this.target?.remove();
+  };
+
   hideLabel = () => {
     this.label?.hide();
   };

@@ -1,3 +1,4 @@
+import { HIDDEN_CSS_CLASS } from "./config";
 import { IMeasurementData } from "./models/base";
 import { TranslationLabel } from "./models/translation-label";
 
@@ -91,3 +92,11 @@ export function formatMeasurement(
   if (!measurement) return "";
   return `${convert(measurement, unit).toFixed(precision)} ${unit}`;
 }
+
+export const hideElement = (element?: HTMLElement) => {
+  if (element) element.classList.add(HIDDEN_CSS_CLASS);
+};
+
+export const showElement = (element?: HTMLElement) => {
+  if (element) element.classList.remove(HIDDEN_CSS_CLASS);
+};

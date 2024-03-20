@@ -5,26 +5,29 @@ import { AnnotationModel } from "./models/annotation-model";
 import { BodyIndicator } from "./models/body-indicator";
 import maleBody from "./assets/male-body.txt?raw";
 import femaleBody from "./assets/female-body.txt?raw";
-// import meshBody from "./assets/mesh-body-alpha.txt?raw";
 import meshBody from "./assets/mesh-body.txt?raw";
+import annotationConfig from "./assets/annotation-config.json";
 
-import { LINE_COLOR } from "./config";
+import { LINE_COLOR, MODEL_KEYS } from "./config";
 import {
   StaticGeometryGenerator,
   computeBoundsTree,
   disposeBoundsTree,
+  acceleratedRaycast,
 } from "three-mesh-bvh";
 import { IMeasurementData, IModelTargetMapper } from "./models/base";
 //* Add the extension functions
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
-// THREE.Mesh.prototype.raycast = acceleratedRaycast;
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 export const filterBodyModelFromList = (
   list: THREE.Object3D<THREE.Object3DEventMap>[]
 ) => {
   return new BodyModel(
-    list.find((el) => el.name?.toLowerCase() == "body") as THREE.Mesh
+    list.find(
+      (el) => el.name?.toLowerCase() == MODEL_KEYS.BodyKey
+    ) as THREE.Mesh
   );
 };
 
@@ -41,22 +44,22 @@ export const filterAnnotationFromList = (
   list: THREE.Object3D<THREE.Object3DEventMap>[]
 ): FilterAnnotationFromListResult[] => {
   const models = list.filter((child) =>
-    child.name?.toLowerCase().endsWith("annotation")
+    child.name?.toLowerCase().endsWith(MODEL_KEYS.AnnotationKey)
   ) as THREE.Mesh[];
 
   const result: FilterAnnotationFromListResult[] = models.map((model) => {
     //*get name
-    const name = model.name.toLowerCase().split("annotation")[0];
+    const name = model.name.toLowerCase().split(MODEL_KEYS.AnnotationKey)[0];
 
     const camera = list.find(
       (child) =>
-        child.name?.toLowerCase().endsWith("camera") &&
+        child.name?.toLowerCase().endsWith(MODEL_KEYS.CameraKey) &&
         child.name?.toLowerCase().startsWith(name)
     ) as THREE.Mesh;
 
     const target = list.find(
       (child) =>
-        child.name?.toLowerCase().endsWith("target") &&
+        child.name?.toLowerCase().endsWith(MODEL_KEYS.TargetKey) &&
         child.name?.toLowerCase().startsWith(name)
     ) as THREE.Mesh;
 
@@ -111,14 +114,17 @@ export function getConfigPosition(
 export const findCameraFromList = (
   list: THREE.Object3D<THREE.Object3DEventMap>[]
 ) => {
-  // debugger;
-  return list.find((el) => el.name?.toLowerCase() == "camera") as THREE.Mesh;
+  return list.find(
+    (el) => el.name?.toLowerCase() == MODEL_KEYS.CameraKey
+  ) as THREE.Mesh;
 };
 
 export const findBodyIndicatorFromList = (
   list: THREE.Object3D<THREE.Object3DEventMap>[]
 ): THREE.Mesh | undefined => {
-  const found = list.find((el) => el.name?.toLowerCase() == "bodyindicator");
+  const found = list.find(
+    (el) => el.name?.toLowerCase() == MODEL_KEYS.BodyIndicator
+  );
 
   if (!found) {
     return undefined;
@@ -186,11 +192,20 @@ export function findMeasurementByTitle(
   measurementData: IMeasurementData[],
   title: string
 ) {
-  const matchStr = title?.toLowerCase().split("annotation")?.[0] ?? title;
+  const matchStr =
+    title?.toLowerCase().split(MODEL_KEYS.AnnotationKey)?.[0] ?? title;
   if (matchStr) {
-    // console.log(matchStr);
     return measurementData.find((el) =>
       el.name?.toLowerCase()?.startsWith(matchStr)
     );
   }
 }
+
+export const findAnnotationConfig = (annotation: AnnotationModel) => {
+  const label = annotation.title ?? "";
+
+  const foundConfig = annotationConfig.find((e) =>
+    label.toLowerCase().includes(e.name)
+  );
+  return foundConfig;
+};
