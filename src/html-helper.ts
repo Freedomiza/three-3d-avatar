@@ -100,3 +100,15 @@ export const hideElement = (element?: HTMLElement) => {
 export const showElement = (element?: HTMLElement) => {
   if (element) element.classList.remove(HIDDEN_CSS_CLASS);
 };
+
+export const createDomNode = (
+  document: Document,
+  className: string = "renderer"
+) => {
+  const div = document.createElement("div");
+  div.classList.add(className);
+
+  document.body.appendChild(div);
+  // this.domNode = div;
+  return div;
+};

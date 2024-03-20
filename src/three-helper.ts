@@ -13,6 +13,7 @@ import BodyModel from "./models/body-model";
 import { LabelModel } from "./models/label-model";
 import { AnnotationModel } from "./models/annotation-model";
 import {
+  createDomNode,
   createHTMLEyeBox,
   createHTMLLabel,
   formatMeasurement,
@@ -26,6 +27,7 @@ import {
   INITIAL_CAMERA_TARGET,
   LINE_COLOR,
   CAMERA_CONFIG,
+  MODEL_KEYS,
 } from "./config";
 import { TranslationLabel } from "./models/translation-label";
 import {
@@ -35,10 +37,12 @@ import {
   findAnnotationConfig,
   findBodyIndicatorFromList,
   findMeasurementByTitle,
+  findWaistPosition,
   getConfigPosition,
   updateMorphTargets,
 } from "./model-helper";
 import { BodyIndicator } from "./models/body-indicator";
+import { postJSMessage } from "./js-channel-helper";
 
 declare global {
   interface Window {
@@ -97,15 +101,6 @@ export class ThreeJSHelper {
     this.labelRenderer?.domElement.remove();
   };
 
-  private createDomNode = (document: Document) => {
-    const div = document.createElement("div");
-    div.classList.add("renderer");
-
-    document.body.appendChild(div);
-    // this.domNode = div;
-    return div;
-  };
-
   init = async (document: Document) => {
     // this.document = document;
     // gsap.ticker.fps(24);
@@ -116,7 +111,7 @@ export class ThreeJSHelper {
           res(true);
           return;
         }
-        this.domNode = this.createDomNode(document);
+        this.domNode = createDomNode(document);
         // Setup render
         this.renderer = this.setUpRenderer(this.domNode);
 
@@ -422,16 +417,13 @@ export class ThreeJSHelper {
           el.label = this.createLabel(el, el.position!, this.scene!);
         });
 
-        const waistPosition = this.annotationModels.find((anno) =>
-          anno.title?.toLowerCase().startsWith("waist")
-        );
+        const waistPosition = findWaistPosition(this.annotationModels);
 
         if (waistPosition) {
           const y = waistPosition?.position?.y ?? 0;
           this.cameraHeight = y - 0.4;
         }
 
-        // this.regenerateMesh();
         // const axesHelper = new THREE.AxesHelper(2);
         // axesHelper.visible = false;
         // this.scene.add(axesHelper);
@@ -449,8 +441,7 @@ export class ThreeJSHelper {
       };
 
       loader.parse(objData, "", onLoad, (event: ErrorEvent) => {
-        console.log("event: " + JSON.stringify(event));
-        onError && onError(event);
+        throw event;
       });
     } catch (err) {
       onError && onError(err);
@@ -696,11 +687,10 @@ export class ThreeJSHelper {
         INITIAL_CAMERA_TARGET.x,
         this.cameraHeight,
         INITIAL_CAMERA_TARGET.z
-      ),
-      () => {
-        console.log("cb");
-      }
+      )
     );
+
+    postJSMessage("ResetCameraChannel", "reset camera");
   };
 
   showWireFrame = () => {

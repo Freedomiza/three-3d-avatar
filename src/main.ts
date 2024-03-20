@@ -5,20 +5,17 @@ import { DualModelHelper } from "./dual-model-helper";
 import { ThreeJSHelper } from "./three-helper";
 import testParams from "./assets/test-params.json";
 import testMeasurementData from "./assets/test-measurement.json";
+import { callFlutterHandler, postJSMessage } from "./js-channel-helper";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const singleView: ThreeJSHelper = new ThreeJSHelper();
   // const dualView: DualModelHelper = new DualModelHelper();
 
   const onLoadModelCompeted = () => {
-    if (window.flutter_inappwebview) {
-      window.flutter_inappwebview.callHandler("onModelLoaded");
-    }
+    callFlutterHandler("onModelLoaded");
   };
   const onLoadModelError = (error: Error) => {
-    if (window.flutter_inappwebview) {
-      window.flutter_inappwebview.callHandler("onModelError", error);
-    }
+    callFlutterHandler("onModelError", error);
   };
 
   window.addEventListener("resize", singleView.onWindowResize);
@@ -121,7 +118,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (window.FlutterChannelReady) {
     console.log("FlutterChannelReady ready");
-    window.FlutterChannelReady.postMessage("Hello from JavaScript!");
+    postJSMessage("FlutterChannelReady", "Hello from JavaScript!");
+    // window.FlutterChannelReady.postMessage("Hello from JavaScript!");
   }
 
   loadDummyModel();
@@ -141,7 +139,6 @@ declare global {
     z: number;
   }
   interface Window {
-    flutter_inappwebview: any;
     loadModel: (
       isMale: boolean,
       params: IModelTargetMapper,
@@ -156,7 +153,6 @@ declare global {
       height2: number,
       params2: IModelTargetMapper
     ) => void;
-    FlutterChannelReady: any;
     singleView: ThreeJSHelper;
     dualView: DualModelHelper;
     loadDummyModel: () => void;

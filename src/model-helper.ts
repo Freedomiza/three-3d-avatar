@@ -209,3 +209,11 @@ export const findAnnotationConfig = (annotation: AnnotationModel) => {
   );
   return foundConfig;
 };
+
+export const findWaistPosition = (annotations: AnnotationModel[]) => {
+  const result = annotations.find((anno) =>
+    anno.title?.toLowerCase().startsWith(MODEL_KEYS.WaistKey)
+  );
+
+  return result;
+};

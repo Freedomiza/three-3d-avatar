@@ -98,5 +98,8 @@ export class AnnotationModel extends BaseModel {
   };
   showTooltips = () => {
     console.log("show Tooltips:" + this.title);
+    if (window.AnnotationChannel) {
+      window.AnnotationChannel.postMessage(this.title);
+    }
   };
 }

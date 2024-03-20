@@ -35,6 +35,7 @@ export const MODEL_KEYS = {
   CameraKey: "camera",
   TargetKey: "target",
   AnnotationKey: "annotation",
+  WaistKey: "waist",
 };
 
 export const CAMERA_CONFIG = {
