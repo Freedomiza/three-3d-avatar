@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   //     );
   //   }, 500);
   // };
+
   window.loadModel = async (
     isMale: boolean,
     params: IModelTargetMapper,
@@ -79,6 +80,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       onLoadModelCompeted,
       onLoadModelError
     );
+  };
+
+  window.updateMorphTargets = async (param: IModelTargetMapper) => {
+    singleView.updateMorphTargets(param);
   };
   const resetAll = () => {
     singleView.unloadModel();
@@ -138,10 +143,11 @@ declare global {
     flutter_inappwebview: any;
     loadModel: (
       isMale: boolean,
-      // height: number,
       params: IModelTargetMapper,
       rawData: IMeasurementData[]
     ) => void;
+    updateMorphTargets: (param: IModelTargetMapper) => void;
+    resetAll: () => void;
     loadDualModel: (
       isMale: boolean,
       height1: number,

@@ -82,7 +82,7 @@ export const updateMorphTargets = (
     indicator?: BodyIndicator;
   }
 ) => {
-  const values = new ModelTargetMapper(params).toArray();
+  const values = new ModelTargetMapper(params).toArray(true);
   // console.log("===> updateMorphTargets");
   // console.log(values.toString());
   if (values) {
