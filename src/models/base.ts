@@ -54,6 +54,8 @@ export interface IModelTargetMapper {
 
 export interface IMeasurementData {
   name: string;
-  unit: string;
+  unit: MetricsType | string;
   value: number;
 }
+
+export type MetricsType = "cm" | "mm" | "in" | "feet";

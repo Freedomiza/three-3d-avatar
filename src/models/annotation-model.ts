@@ -5,7 +5,7 @@ import { TranslationLabel } from "./translation-label";
 import { formatMeasurement, updateHTMLLabel } from "../html-helper";
 // import { StaticGeometryGenerator } from "three-mesh-bvh";
 import { calculateMeshPosition } from "../model-helper";
-import { IMeasurementData } from "./base";
+import { IMeasurementData, MetricsType } from "./base";
 import { postJSMessage } from "../js-channel-helper";
 
 export class AnnotationModel extends BaseModel {
@@ -106,5 +106,10 @@ export class AnnotationModel extends BaseModel {
     this.measurement = measurement;
     const value = formatMeasurement(measurement);
     this.label?.updateValue(value);
+  };
+
+  updateMetrics = (metric: MetricsType) => {
+    const newValue = formatMeasurement(this.measurement, metric);
+    this.label?.updateValue(newValue);
   };
 }

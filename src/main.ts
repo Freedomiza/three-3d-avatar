@@ -1,6 +1,10 @@
 import modelData from "./assets/avatar.json?raw";
 import "./assets/style.scss";
-import { IMeasurementData, IModelTargetMapper } from "./models/base";
+import {
+  IMeasurementData,
+  IModelTargetMapper,
+  MetricsType,
+} from "./models/base";
 import { DualModelHelper } from "./dual-model-helper";
 import { ThreeJSHelper } from "./three-helper";
 import testParams from "./assets/test-params.json";
@@ -86,6 +90,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   ) => {
     singleView.updateMorphTargets(param, measurement);
   };
+
+  window.updateMetrics = (metrics) => {
+    singleView.updateMetrics(metrics);
+  };
+
   const resetAll = () => {
     singleView.unloadModel();
     // dualView.unloadModel();
@@ -163,5 +172,6 @@ declare global {
     dualView: DualModelHelper;
     loadDummyModel: () => void;
     loadDualDummyModel: () => void;
+    updateMetrics: (metric: MetricsType) => void;
   }
 }

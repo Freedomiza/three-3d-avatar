@@ -1,5 +1,5 @@
 import { HIDDEN_CSS_CLASS } from "./config";
-import { IMeasurementData } from "./models/base";
+import { IMeasurementData, MetricsType } from "./models/base";
 import { TranslationLabel } from "./models/translation-label";
 
 export const createHTMLLabel = ({
@@ -66,29 +66,59 @@ export function debounce<Params extends any[]>(
   };
 }
 
-export function convert(measurement: IMeasurementData, unit: string) {
+export function convert(
+  measurement: IMeasurementData,
+  displayUnit: MetricsType
+) {
   //measurement in mm
-  const { value } = measurement;
+  const { value, unit } = measurement;
+  let valueAsMM = value;
   switch (unit) {
     case "cm":
-      return value * 0.1;
+      valueAsMM = value * 10;
+      break;
     case "feet":
-      return value / 304.8;
-    case "inches":
-      return value / 25.4;
+      valueAsMM = value * 304.8;
+      break;
+    case "in":
+      valueAsMM = value * 25.4;
+      break;
+    case "mm":
     default:
-      return value;
+      break;
+  }
+
+  switch (displayUnit) {
+    case "cm":
+      return valueAsMM / 10;
+    case "feet":
+      return valueAsMM / 304.8;
+    case "in":
+      return valueAsMM / 25.4;
+    default:
+      return valueAsMM;
   }
 }
 
 export function formatMeasurement(
   measurement?: IMeasurementData,
-  unit: string = "cm",
+  unit: MetricsType = "cm",
   precision: number = 1
 ) {
   if (!measurement) return "";
-  return `${convert(measurement, unit).toFixed(precision)} ${unit}`;
+  return `${convert(measurement, unit).toFixed(precision)} ${getMeasurementUnit(
+    unit
+  )}`;
 }
+
+export const getMeasurementUnit = (unit: MetricsType): string => {
+  switch (unit) {
+    case "feet":
+      return "ft";
+    default:
+      return unit;
+  }
+};
 
 export const hideElement = (element?: HTMLElement) => {
   if (element) element.classList.add(HIDDEN_CSS_CLASS);

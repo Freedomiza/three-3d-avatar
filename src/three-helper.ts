@@ -8,7 +8,11 @@ import {
   CSS2DRenderer,
 } from "three/addons/renderers/CSS2DRenderer.js";
 
-import { IMeasurementData, IModelTargetMapper } from "./models/base";
+import {
+  IMeasurementData,
+  IModelTargetMapper,
+  MetricsType,
+} from "./models/base";
 import BodyModel from "./models/body-model";
 import { LabelModel } from "./models/label-model";
 import { AnnotationModel } from "./models/annotation-model";
@@ -56,22 +60,22 @@ enum RenderMode {
 }
 
 export class ThreeJSHelper {
-  private renderer?: THREE.WebGLRenderer;
-  private scene?: THREE.Scene;
-  camera?: THREE.PerspectiveCamera;
+  private _renderer?: THREE.WebGLRenderer;
+  private _scene?: THREE.Scene;
+  private _camera?: THREE.PerspectiveCamera;
   private _cameraMaxZoomableDistance = CAMERA_CONFIG.maxZoomable;
   private _cameraHideLabelDistance = CAMERA_CONFIG.hideLabelDistance;
-  bodyModel?: BodyModel;
+  private _bodyModel?: BodyModel;
   private _renderMode: RenderMode = RenderMode.FullBody;
-  private labelRenderer?: CSS2DRenderer;
+  private _labelRenderer?: CSS2DRenderer;
 
-  private domNode?: HTMLDivElement;
+  private _domNode?: HTMLDivElement;
 
   // private meshHelper?: THREE.Mesh;
 
   // private staticGeometryGenerator?: StaticGeometryGenerator;
   // private bvhHelper?: MeshBVHHelper;
-  private controls?: OrbitControls;
+  private _controls?: OrbitControls;
   annotationModels: AnnotationModel[] = [];
   bodyIndicator?: BodyIndicator;
 
@@ -84,20 +88,20 @@ export class ThreeJSHelper {
 
   set cameraHeight(value: number) {
     this._cameraHeight = value;
-    this.controls?.target.set(0, value, 0);
-    this.camera!.position.set(
+    this._controls?.target.set(0, value, 0);
+    this._camera!.position.set(
       INITIAL_CAMERA_POSITION.x,
       this._cameraHeight,
       INITIAL_CAMERA_POSITION.z
     );
 
-    this.controls?.update();
+    this._controls?.update();
   }
 
   dispose = () => {
-    this.controls?.removeEventListener("change", this.onControlChanged);
-    this.renderer?.dispose();
-    this.labelRenderer?.domElement.remove();
+    this._controls?.removeEventListener("change", this.onControlChanged);
+    this._renderer?.dispose();
+    this._labelRenderer?.domElement.remove();
   };
 
   init = async (document: Document) => {
@@ -106,30 +110,33 @@ export class ThreeJSHelper {
     return new Promise((res, rej) => {
       try {
         // Already initialized
-        if (this.domNode) {
+        if (this._domNode) {
           res(true);
           return;
         }
-        this.domNode = createDomNode(document);
-        document.body.appendChild(this.domNode);
+        this._domNode = createDomNode(document);
+        document.body.appendChild(this._domNode);
 
         // Setup render
-        this.renderer = this.setUpRenderer(this.domNode);
+        this._renderer = this.setUpRenderer(this._domNode);
 
         // Set up scene
-        this.scene = this.setUpScene();
+        this._scene = this.setUpScene();
         // Set up camera
-        this.camera = this.setUpCamera();
-        this.scene.add(this.camera);
+        this._camera = this.setUpCamera();
+        this._scene.add(this._camera);
 
         // Set up label Renderer
-        this.labelRenderer = this.setupLabelRenderer(this.domNode);
+        this._labelRenderer = this.setupLabelRenderer(this._domNode);
         // Setup controls
-        this.controls = this.setUpOrbitControl(this.camera, this.labelRenderer);
+        this._controls = this.setUpOrbitControl(
+          this._camera,
+          this._labelRenderer
+        );
 
-        this.controls.addEventListener("change", this.onControlChanged);
+        this._controls.addEventListener("change", this.onControlChanged);
 
-        window.camera = this.camera;
+        window.camera = this._camera;
         this._renderMode = RenderMode.FullBody;
         // this.domNode.classList.add(HIDDEN_CSS_CLASS);
         setTimeout(() => {
@@ -150,7 +157,7 @@ export class ThreeJSHelper {
   _startZoom?: number;
 
   onControlChanged = () => {
-    if (!this.camera) return;
+    if (!this._camera) return;
     // TODO: add more controller here if possible
     // const meshDistance = this.camera.position.distanceTo(
     //   this.getCenterTarget()
@@ -170,7 +177,9 @@ export class ThreeJSHelper {
       clearTimeout(this._isMovingId);
     } else {
       this.hideAllLabels();
-      this._startZoom = this.camera.position.distanceTo(this.getCenterTarget());
+      this._startZoom = this._camera.position.distanceTo(
+        this.getCenterTarget()
+      );
     }
 
     this._isMovingId = setTimeout(() => {
@@ -183,8 +192,8 @@ export class ThreeJSHelper {
   };
 
   checkLabelShouldVisible = () => {
-    if (!this.camera) return;
-    const camera = this.camera!;
+    if (!this._camera) return;
+    const camera = this._camera!;
     const meshDistance = camera.position.distanceTo(this.getCenterTarget());
     if (meshDistance < this._cameraHideLabelDistance) {
       this.hideAllLabels();
@@ -247,11 +256,12 @@ export class ThreeJSHelper {
     target: THREE.Vector3,
     callBack?: () => void | null
   ) {
-    if (!this.camera || !this.controls) return;
-    const controls = this.controls;
+    if (!this._camera || !this._controls) return;
+
+    const controls = this._controls;
 
     // Animate the camera
-    gsap.to(this.camera.position, {
+    gsap.to(this._camera.position, {
       duration: ANIMATION_DURATION, // Animation duration in seconds
       x: position.x,
       y: position.y,
@@ -277,26 +287,32 @@ export class ThreeJSHelper {
   zoomToAnnotation = (label: string) => {
     const foundAnnotation = this.findAnnotationByName(label);
     if (!foundAnnotation) return;
+    this.moveToPart(foundAnnotation);
 
-    const foundConfig = findAnnotationConfig(foundAnnotation);
+    // const foundConfig = findAnnotationConfig(foundAnnotation);
 
-    if (foundConfig) {
-      const position = foundAnnotation!.position!;
+    // if (foundConfig) {
+    //   const position = foundAnnotation!.position!;
 
-      const cameraPos =
-        foundAnnotation.cameraPosition ??
-        getConfigPosition(foundConfig?.camera?.position, new THREE.Vector3());
-      const targetPos =
-        foundAnnotation.targetPosition ?? position ?? new THREE.Vector3();
-      this.moveCamera(cameraPos, targetPos);
-    }
+    //   const cameraPos =
+    //     foundAnnotation.cameraPosition ??
+    //     getConfigPosition(foundConfig?.camera?.position, new THREE.Vector3());
+    //   const targetPos =
+    //     foundAnnotation.targetPosition ?? position ?? new THREE.Vector3();
+    //   this.moveCamera(cameraPos, targetPos);
+    // }
   };
 
   render = () => {
-    if (!this.renderer || !this.labelRenderer || !this.scene || !this.camera)
+    if (
+      !this._renderer ||
+      !this._labelRenderer ||
+      !this._scene ||
+      !this._camera
+    )
       return;
-    this.renderer.render(this.scene, this.camera);
-    this.labelRenderer.render(this.scene, this.camera);
+    this._renderer.render(this._scene, this._camera);
+    this._labelRenderer.render(this._scene, this._camera);
   };
 
   // Update all eye annotation which is behind and which is in front of the camera
@@ -320,7 +336,7 @@ export class ThreeJSHelper {
     this._morphs = params;
 
     updateMorphTargets(params, {
-      bodyModel: this.bodyModel,
+      bodyModel: this._bodyModel,
       annotationModels: this.annotationModels,
       indicator: this.bodyIndicator,
     });
@@ -329,7 +345,7 @@ export class ThreeJSHelper {
   };
 
   unloadModel: () => void = () => {
-    const scene = this.scene;
+    const scene = this._scene;
     if (!scene) return;
     const labelModels = this.annotationModels;
 
@@ -339,8 +355,8 @@ export class ThreeJSHelper {
     }
 
     this.bodyIndicator?.dispose();
-    this.bodyModel?.dispose();
-    this.bodyModel = undefined;
+    this._bodyModel?.dispose();
+    this._bodyModel = undefined;
     this.bodyIndicator = undefined;
 
     // for (let i = scene.children.length - 1; i >= 0; i--) {
@@ -363,7 +379,7 @@ export class ThreeJSHelper {
 
     scene.clear();
 
-    hideElement(this.domNode);
+    hideElement(this._domNode);
   };
 
   loadModel = (
@@ -374,8 +390,8 @@ export class ThreeJSHelper {
     callback?: () => void,
     onError: (error: any) => void = () => {}
   ) => {
-    if (this.bodyModel != null) this.unloadModel();
-    showElement(this.domNode);
+    if (this._bodyModel != null) this.unloadModel();
+    showElement(this._domNode);
 
     this._morphs = params;
     // console.log("morph: " + JSON.stringify(params));
@@ -390,9 +406,9 @@ export class ThreeJSHelper {
       // loader.setDRACOLoader(dracoLoader);
 
       const onLoad = (result: GLTF) => {
-        if (!this.scene || !this.domNode) return;
+        if (!this._scene || !this._domNode) return;
 
-        this.bodyModel = filterBodyModelFromList(result.scene.children);
+        this._bodyModel = filterBodyModelFromList(result.scene.children);
         const modelsPairs = filterAnnotationFromList(result.scene.children);
 
         this.annotationModels = this.generateAnnotations(modelsPairs);
@@ -405,13 +421,13 @@ export class ThreeJSHelper {
         // console.log("Update model morph");
 
         updateMorphTargets(params, {
-          bodyModel: this.bodyModel,
+          bodyModel: this._bodyModel,
           annotationModels: this.annotationModels,
           indicator: this.bodyIndicator,
         });
 
         //* Skin
-        this.bodyModel.setGender(isMale);
+        this._bodyModel.setGender(isMale);
 
         this.annotationModels.forEach((el) => {
           el.calculatePosition();
@@ -420,7 +436,7 @@ export class ThreeJSHelper {
 
           if (measurement) el.measurement = measurement;
 
-          el.label = this.createLabel(el, el.position!, this.scene!);
+          el.label = this.createLabel(el, el.position!, this._scene!);
         });
 
         const waistPosition = findWaistPosition(this.annotationModels);
@@ -433,11 +449,11 @@ export class ThreeJSHelper {
         // const axesHelper = new THREE.AxesHelper(2);
         // axesHelper.visible = false;
         // this.scene.add(axesHelper);
-        this.scene.add(...result.scene.children);
+        this._scene.add(...result.scene.children);
 
         // this.regenerateMesh();
 
-        this.camera?.updateMatrixWorld();
+        this._camera?.updateMatrixWorld();
 
         this.animate();
 
@@ -454,27 +470,6 @@ export class ThreeJSHelper {
     }
   };
 
-  // regenerateMesh = () => {
-  //   // const meshHelper = this.meshHelper;
-  //   // if (meshHelper) {
-  //   //   // let generateTime, refitTime, startTime;
-  //   //   // time the geometry generation
-  //   //   // startTime = window.performance.now();
-  //   //   this.staticGeometryGenerator?.generate(meshHelper.geometry);
-  //   //   // generateTime = window.performance.now() - startTime;
-  //   //   // time the bvh refitting
-  //   //   // startTime = window.performance.now();
-  //   //   if (!(meshHelper.geometry as any).boundsTree) {
-  //   //     (meshHelper.geometry as any).computeBoundsTree();
-  //   //     // refitTime = "-";
-  //   //   } else {
-  //   //     (meshHelper.geometry as any).boundsTree.refit();
-  //   //     // refitTime = (window.performance.now() - startTime).toFixed(2);
-  //   //   }
-  //   //   // this.bvhHelper?.update();
-  //   // }
-  // };
-
   animate = () => {
     requestAnimationFrame(this.animate);
     // this.controls?.update();
@@ -482,14 +477,14 @@ export class ThreeJSHelper {
   };
 
   onWindowResize = () => {
-    if (!this.camera || !this.renderer || !this.labelRenderer) return;
+    if (!this._camera || !this._renderer || !this._labelRenderer) return;
 
-    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this._camera.aspect = window.innerWidth / window.innerHeight;
 
-    this.camera.updateProjectionMatrix();
+    this._camera.updateProjectionMatrix();
 
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    this._renderer.setSize(window.innerWidth, window.innerHeight);
+    this._labelRenderer.setSize(window.innerWidth, window.innerHeight);
   };
 
   private setUpOrbitControl = (
@@ -541,10 +536,11 @@ export class ThreeJSHelper {
 
   moveToPart = (el: AnnotationModel) => {
     this._renderMode = RenderMode.Detail;
-    this.showAllEyes();
+    // this.showAllEyes();
+    this.hideAllEyes();
     this.hideAllLabels();
-    el.hideEye();
-    el.showTooltips();
+    // el.hideEye();
+    // el.showTooltips();
 
     const position = el.position ?? new THREE.Vector3();
     const foundConfig = findAnnotationConfig(el);
@@ -588,7 +584,11 @@ export class ThreeJSHelper {
       // });
     }
 
-    this.moveCamera(cameraPos, targetPos);
+    this.moveCamera(cameraPos, targetPos, () => {
+      this.showAllEyes();
+      el.hideEye();
+      el.showTooltips();
+    });
   };
 
   createLabel = (
@@ -624,7 +624,7 @@ export class ThreeJSHelper {
 
     scene.add(startObject);
 
-    this.domNode?.appendChild(labelDiv);
+    this._domNode?.appendChild(labelDiv);
     //* Compute position
     const labelModel = new LabelModel(labelDiv, startObject, offsetPosition);
     labelModel.updatePosition();
@@ -645,7 +645,7 @@ export class ThreeJSHelper {
   };
 
   resetCameraCenter = () => {
-    const controls = this.controls!;
+    const controls = this._controls!;
     const target = new THREE.Vector3(
       INITIAL_CAMERA_TARGET.x,
       this.cameraHeight,
@@ -653,7 +653,7 @@ export class ThreeJSHelper {
     );
 
     updateMorphTargets(this._morphs!, {
-      bodyModel: this.bodyModel,
+      bodyModel: this._bodyModel,
       annotationModels: this.annotationModels,
       indicator: this.bodyIndicator,
     });
@@ -677,7 +677,7 @@ export class ThreeJSHelper {
     this.showAllLabels();
 
     updateMorphTargets(this._morphs!, {
-      bodyModel: this.bodyModel,
+      bodyModel: this._bodyModel,
       annotationModels: this.annotationModels,
       indicator: this.bodyIndicator,
     });
@@ -701,11 +701,11 @@ export class ThreeJSHelper {
   showWireFrame = () => {
     this.hideAllEyes();
     this.hideAllLabels();
-    this.bodyModel?.toggleWireFrame(true);
+    this._bodyModel?.toggleWireFrame(true);
   };
 
   hideWireFrame = () => {
-    this.bodyModel?.toggleWireFrame(false);
+    this._bodyModel?.toggleWireFrame(false);
   };
 
   findAnnotationByName = (name: string) => {
@@ -759,11 +759,11 @@ export class ThreeJSHelper {
   };
 
   unlockCamera: () => void = () => {
-    if (this.controls) this.controls.enabled = true;
+    if (this._controls) this._controls.enabled = true;
   };
 
   lockCamera: () => void = () => {
-    if (this.controls) this.controls.enabled = false;
+    if (this._controls) this._controls.enabled = false;
   };
 
   updateMeasurements = (measurementData: IMeasurementData[]) => {
@@ -775,6 +775,12 @@ export class ThreeJSHelper {
     this.annotationModels.forEach((el) => {
       const measurement = findMeasurementByTitle(measurementData, el.title);
       if (measurement) el?.updateLabelMeasurement(measurement);
+    });
+  };
+
+  updateMetrics = (metric: MetricsType) => {
+    this.annotationModels.forEach((el) => {
+      el?.updateMetrics(metric);
     });
   };
 }

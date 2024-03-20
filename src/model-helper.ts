@@ -135,7 +135,7 @@ export const findBodyIndicatorFromList = (
 
 export const loadTextures = (bodyType = BodyType.male): THREE.Material => {
   let skinTexture: THREE.Texture;
-  console.log("Load body texture:" + bodyType);
+  // console.log("Load body texture:" + bodyType);
   switch (bodyType) {
     case BodyType.male:
       skinTexture = new THREE.TextureLoader().load(maleBody);
