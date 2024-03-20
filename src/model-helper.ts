@@ -189,7 +189,7 @@ export const calculateMeshPosition = (obj: THREE.Mesh) => {
 };
 
 export function findMeasurementByTitle(
-  measurementData: IMeasurementData[],
+  measurementData: IMeasurementData[] = [],
   title: string
 ) {
   const matchStr =

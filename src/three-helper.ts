@@ -315,7 +315,7 @@ export class ThreeJSHelper {
 
   updateMorphTargets = (
     params: IModelTargetMapper,
-    measurement: IMeasurementData[]
+    measurement: IMeasurementData[] = []
   ) => {
     this._morphs = params;
 
@@ -599,7 +599,6 @@ export class ThreeJSHelper {
     const label = el.title ?? "";
 
     //* Create a CSS2D label
-
     const foundConfig = findAnnotationConfig(el);
 
     let offsetPosition = foundConfig?.position ?? "right";
@@ -768,13 +767,12 @@ export class ThreeJSHelper {
   };
 
   updateMeasurements = (measurementData: IMeasurementData[]) => {
+    if (measurementData.length == 0) return;
     console.log({
       measurementData,
     });
 
     this.annotationModels.forEach((el) => {
-      el.calculatePosition();
-
       const measurement = findMeasurementByTitle(measurementData, el.title);
       if (measurement) el?.updateLabelMeasurement(measurement);
     });

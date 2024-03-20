@@ -18,22 +18,19 @@ export const createHTMLLabel = ({
   labelDiv.className = `annotation-label annotation-${position}`;
 
   labelDiv.innerHTML = `
-  
     <span class="annotation-label-title">${title}</span>
     <div class="line"> </div>
     <span class="annotation-label-value">${value}</span>
   `;
-
-  labelDiv.addEventListener("pointerdown", () => onPointerDown?.());
+  if (onPointerDown) labelDiv.addEventListener("pointerdown", onPointerDown);
 
   return labelDiv;
 };
 
-export const createHTMLEyeBox = (onPointerDown: () => void) => {
+export const createHTMLEyeBox = (onPointerDown?: () => void) => {
   const element = document.createElement("div");
   element.className = "annotation-label-arrow";
-
-  element.addEventListener("pointerdown", () => onPointerDown?.());
+  if (onPointerDown) element.addEventListener("pointerdown", onPointerDown);
 
   return element;
 };
@@ -43,15 +40,15 @@ export const updateHTMLLabel = (
   data: TranslationLabel
 ) => {
   if (data.label) {
-    const title = element.querySelector(".annotation-label-title");
-    if (title) {
-      title.textContent = data.label;
+    const titleNode = element.querySelector(".annotation-label-title");
+    if (titleNode) {
+      titleNode.textContent = data.label;
     }
   }
   if (data.value) {
-    const value = element.querySelector(".annotation-label-value");
-    if (value) {
-      value.textContent = data.value;
+    const valueNode = element.querySelector(".annotation-label-value");
+    if (valueNode) {
+      valueNode.textContent = data.value;
     }
   }
 };
