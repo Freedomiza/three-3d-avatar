@@ -1,13 +1,19 @@
 import { computePosition, shift, offset, size } from "@floating-ui/dom";
 import { CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
+import {
+  createDomNode,
+  hideElement,
+  showElement,
+  updateHTMLLabel,
+} from "../html-helper";
 
 export class LabelModel {
   padding: number = 15;
   eyeSprite: CSS2DObject;
   label: HTMLDivElement;
   arrowEl: HTMLDivElement;
-  placement: string = "right";
 
+  placement: string = "right";
   isVisible = true;
 
   constructor(
@@ -17,8 +23,7 @@ export class LabelModel {
   ) {
     this.label = label;
 
-    this.arrowEl = document.createElement("div");
-    this.arrowEl.classList.add("arrow");
+    this.arrowEl = createDomNode(document, "arrow");
     document.body.appendChild(this.arrowEl);
 
     this.eyeSprite = eyeSprite;
@@ -108,20 +113,27 @@ export class LabelModel {
   }
 
   _hidden: boolean = false;
+
   hide = () => {
     if (this._hidden === true) return;
     this._hidden = true;
-
-    this.label.classList.add("hidden");
-    this.arrowEl.classList.add("hidden");
+    hideElement(this.label);
+    hideElement(this.arrowEl);
   };
   show = () => {
     this._hidden = false;
-    this.label.classList.remove("hidden");
-    this.arrowEl.classList.remove("hidden");
+    showElement(this.label);
+    showElement(this.arrowEl);
   };
 
   toggleEye = (value: boolean) => {
     this.eyeSprite.visible = value;
+  };
+
+  updateValue = (valueStr: string) => {
+    updateHTMLLabel(this.label, {
+      label: undefined,
+      value: valueStr,
+    });
   };
 }

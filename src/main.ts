@@ -80,8 +80,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   };
 
-  window.updateMorphTargets = async (param: IModelTargetMapper) => {
-    singleView.updateMorphTargets(param);
+  window.updateMorphTargets = async (
+    param: IModelTargetMapper,
+    measurement: IMeasurementData[]
+  ) => {
+    singleView.updateMorphTargets(param, measurement);
   };
   const resetAll = () => {
     singleView.unloadModel();
@@ -144,7 +147,10 @@ declare global {
       params: IModelTargetMapper,
       rawData: IMeasurementData[]
     ) => void;
-    updateMorphTargets: (param: IModelTargetMapper) => void;
+    updateMorphTargets: (
+      param: IModelTargetMapper,
+      measurement: IMeasurementData[]
+    ) => void;
     resetAll: () => void;
     loadDualModel: (
       isMale: boolean,

@@ -2,10 +2,11 @@ import * as THREE from "three";
 import { BaseModel } from "./base-model";
 import { LabelModel } from "./label-model";
 import { TranslationLabel } from "./translation-label";
-import { updateHTMLLabel } from "../html-helper";
+import { formatMeasurement, updateHTMLLabel } from "../html-helper";
 // import { StaticGeometryGenerator } from "three-mesh-bvh";
 import { calculateMeshPosition } from "../model-helper";
 import { IMeasurementData } from "./base";
+import { postJSMessage } from "../js-channel-helper";
 
 export class AnnotationModel extends BaseModel {
   label?: LabelModel;
@@ -98,8 +99,12 @@ export class AnnotationModel extends BaseModel {
   };
   showTooltips = () => {
     console.log("show Tooltips:" + this.title);
-    if (window.AnnotationChannel) {
-      window.AnnotationChannel.postMessage(this.title);
-    }
+    postJSMessage("AnnotationChannel", this.title);
+  };
+
+  updateLabelMeasurement = (measurement: IMeasurementData) => {
+    this.measurement = measurement;
+    const value = formatMeasurement(measurement);
+    this.label?.updateValue(value);
   };
 }

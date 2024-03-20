@@ -27,7 +27,6 @@ import {
   INITIAL_CAMERA_TARGET,
   LINE_COLOR,
   CAMERA_CONFIG,
-  MODEL_KEYS,
 } from "./config";
 import { TranslationLabel } from "./models/translation-label";
 import {
@@ -112,6 +111,8 @@ export class ThreeJSHelper {
           return;
         }
         this.domNode = createDomNode(document);
+        document.body.appendChild(this.domNode);
+
         // Setup render
         this.renderer = this.setUpRenderer(this.domNode);
 
@@ -312,7 +313,10 @@ export class ThreeJSHelper {
     // });
   };
 
-  updateMorphTargets = (params: IModelTargetMapper) => {
+  updateMorphTargets = (
+    params: IModelTargetMapper,
+    measurement: IMeasurementData[]
+  ) => {
     this._morphs = params;
 
     updateMorphTargets(params, {
@@ -320,6 +324,8 @@ export class ThreeJSHelper {
       annotationModels: this.annotationModels,
       indicator: this.bodyIndicator,
     });
+
+    this.updateMeasurements(measurement);
   };
 
   unloadModel: () => void = () => {
@@ -759,5 +765,18 @@ export class ThreeJSHelper {
 
   lockCamera: () => void = () => {
     if (this.controls) this.controls.enabled = false;
+  };
+
+  updateMeasurements = (measurementData: IMeasurementData[]) => {
+    console.log({
+      measurementData,
+    });
+
+    this.annotationModels.forEach((el) => {
+      el.calculatePosition();
+
+      const measurement = findMeasurementByTitle(measurementData, el.title);
+      if (measurement) el?.updateLabelMeasurement(measurement);
+    });
   };
 }

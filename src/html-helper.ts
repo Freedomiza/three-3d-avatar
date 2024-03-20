@@ -107,8 +107,5 @@ export const createDomNode = (
 ) => {
   const div = document.createElement("div");
   div.classList.add(className);
-
-  document.body.appendChild(div);
-  // this.domNode = div;
   return div;
 };
