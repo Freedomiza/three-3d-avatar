@@ -6,8 +6,10 @@ import {
   showElement,
   updateHTMLLabel,
 } from "../html-helper";
+import { findAnnotationConfigByKey } from "../model-helper";
 
 export class LabelModel {
+  key: string;
   padding: number = 15;
   eyeSprite: CSS2DObject;
   label: HTMLDivElement;
@@ -17,10 +19,12 @@ export class LabelModel {
   isVisible = true;
 
   constructor(
+    key: string,
     label: HTMLDivElement,
     eyeSprite: CSS2DObject,
     placement: string
   ) {
+    this.key = key;
     this.label = label;
 
     this.arrowEl = createDomNode(document, "arrow");
@@ -136,4 +140,15 @@ export class LabelModel {
       value: valueStr,
     });
   };
+
+  updateUI() {
+    const foundConfig = findAnnotationConfigByKey(this.key);
+    if (foundConfig) {
+      updateHTMLLabel(this.label, {
+        label: foundConfig.label,
+      });
+
+      this.updatePosition();
+    }
+  }
 }

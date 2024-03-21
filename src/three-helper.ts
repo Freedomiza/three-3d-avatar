@@ -626,7 +626,12 @@ export class ThreeJSHelper {
 
     this._domNode?.appendChild(labelDiv);
     //* Compute position
-    const labelModel = new LabelModel(labelDiv, startObject, offsetPosition);
+    const labelModel = new LabelModel(
+      foundConfig?.name ?? label,
+      labelDiv,
+      startObject,
+      offsetPosition
+    );
     labelModel.updatePosition();
 
     return labelModel;
@@ -783,4 +788,11 @@ export class ThreeJSHelper {
       el?.updateMetrics(metric);
     });
   };
+
+  updateUI() {
+    this.annotationModels.forEach((el) => {
+      el?.updateUI();
+    });
+    // this.render();
+  }
 }

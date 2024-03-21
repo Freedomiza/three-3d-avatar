@@ -10,6 +10,9 @@ body {
   font-size: var(--fontSize);
   box-sizing: border-box;
   overflow: hidden;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
 }
 @keyframes fade {
   0% { opacity: 0 }
@@ -56,7 +59,7 @@ body {
 .annotation-label-arrow {
   width: 32px;
   height: 32px;
-  background-size: 24px;
+  background-size: 16pt;
   background-repeat: no-repeat;
   background-position: center;
   background-image: url("data:image/svg+xml,%3Csvg width='20' height='18' viewBox='0 0 20 18' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cg filter='url(%23filter0_dd_4334_25848)'%3E%3Cg filter='url(%23filter1_b_4334_25848)'%3E%3Cpath d='M9.993 4C7.79335 4 6 5.79334 6 8.007C6 10.2067 7.79335 12 9.993 12C12.1926 12 14 10.2067 14 8.007C14 5.80735 12.1926 4 9.993 4Z' fill='%2314142B' fill-opacity='0.2'/%3E%3C/g%3E%3Cpath d='M16.1668 6.10044C14.6268 3.68044 12.3735 2.28711 10.0002 2.28711C8.8135 2.28711 7.66016 2.63378 6.60683 3.28044C5.5535 3.93378 4.60683 4.88711 3.8335 6.10044C3.16683 7.14711 3.16683 8.84711 3.8335 9.89378C5.3735 12.3204 7.62683 13.7071 10.0002 13.7071C11.1868 13.7071 12.3402 13.3604 13.3935 12.7138C14.4468 12.0604 15.3935 11.1071 16.1668 9.89378C16.8335 8.85378 16.8335 7.14711 16.1668 6.10044ZM10.0002 10.6938C8.50683 10.6938 7.30683 9.48711 7.30683 8.00044C7.30683 6.51378 8.50683 5.30711 10.0002 5.30711C11.4935 5.30711 12.6935 6.51378 12.6935 8.00044C12.6935 9.48711 11.4935 10.6938 10.0002 10.6938Z' fill='white'/%3E%3C/g%3E%3Cdefs%3E%3Cfilter id='filter0_dd_4334_25848' x='-1' y='-2' width='22' height='22' filterUnits='userSpaceOnUse' color-interpolation-filters='sRGB'%3E%3CfeFlood flood-opacity='0' result='BackgroundImageFix'/%3E%3CfeColorMatrix in='SourceAlpha' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0' result='hardAlpha'/%3E%3CfeOffset dy='1'/%3E%3CfeGaussianBlur stdDeviation='1'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.0627451 0 0 0 0 0.0941176 0 0 0 0 0.156863 0 0 0 0.06 0'/%3E%3CfeBlend mode='darken' in2='BackgroundImageFix' result='effect1_dropShadow_4334_25848'/%3E%3CfeColorMatrix in='SourceAlpha' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0' result='hardAlpha'/%3E%3CfeOffset dy='1'/%3E%3CfeGaussianBlur stdDeviation='1.5'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.0784314 0 0 0 0 0.0784314 0 0 0 0 0.168627 0 0 0 0.2 0'/%3E%3CfeBlend mode='darken' in2='effect1_dropShadow_4334_25848' result='effect2_dropShadow_4334_25848'/%3E%3CfeBlend mode='normal' in='SourceGraphic' in2='effect2_dropShadow_4334_25848' result='shape'/%3E%3C/filter%3E%3Cfilter id='filter1_b_4334_25848' x='-6' y='-8' width='32' height='32' filterUnits='userSpaceOnUse' color-interpolation-filters='sRGB'%3E%3CfeFlood flood-opacity='0' result='BackgroundImageFix'/%3E%3CfeGaussianBlur in='BackgroundImageFix' stdDeviation='6'/%3E%3CfeComposite in2='SourceAlpha' operator='in' result='effect1_backgroundBlur_4334_25848'/%3E%3CfeBlend mode='normal' in='SourceGraphic' in2='effect1_backgroundBlur_4334_25848' result='shape'/%3E%3C/filter%3E%3C/defs%3E%3C/svg%3E%0A");
@@ -107,4 +110,5 @@ body {
   top: 0;
   width: 100vw;
   height: auto;
+  
 }

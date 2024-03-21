@@ -3,7 +3,6 @@ import { BaseModel } from "./base-model";
 import { LabelModel } from "./label-model";
 import { TranslationLabel } from "./translation-label";
 import { formatMeasurement, updateHTMLLabel } from "../html-helper";
-// import { StaticGeometryGenerator } from "three-mesh-bvh";
 import { calculateMeshPosition } from "../model-helper";
 import { IMeasurementData, MetricsType } from "./base";
 import { postJSMessage } from "../js-channel-helper";
@@ -49,6 +48,7 @@ export class AnnotationModel extends BaseModel {
   hideEye = () => {
     this.label?.toggleEye(false);
   };
+
   updateLabelContent = (data: TranslationLabel) => {
     if (this.label) {
       updateHTMLLabel(this.label.label, data);
@@ -112,4 +112,10 @@ export class AnnotationModel extends BaseModel {
     const newValue = formatMeasurement(this.measurement, metric);
     this.label?.updateValue(newValue);
   };
+
+  updateUI() {
+    if (this.label) {
+      this.label.updateUI();
+    }
+  }
 }

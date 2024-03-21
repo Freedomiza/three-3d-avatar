@@ -10,8 +10,12 @@ import { ThreeJSHelper } from "./three-helper";
 import testParams from "./assets/test-params.json";
 import testMeasurementData from "./assets/test-measurement.json";
 import { callFlutterHandler, postJSMessage } from "./js-channel-helper";
+import { isInApp } from "./html-helper";
+import { initConfig, updateTranslation } from "./model-helper";
+import { AnnotationConfig } from "./models/annotation-config";
 
 document.addEventListener("DOMContentLoaded", async () => {
+  initConfig();
   const singleView: ThreeJSHelper = new ThreeJSHelper();
   // const dualView: DualModelHelper = new DualModelHelper();
 
@@ -95,6 +99,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     singleView.updateMetrics(metrics);
   };
 
+  window.updateTranslation = async (translation: Record<string, string>) => {
+    updateTranslation(translation);
+
+    singleView.updateUI();
+  };
+
   const resetAll = () => {
     singleView.unloadModel();
     // dualView.unloadModel();
@@ -134,14 +144,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     // window.FlutterChannelReady.postMessage("Hello from JavaScript!");
   }
 
-  loadDummyModel();
-
-  // loadDualDummyModel();
-
   window.loadDummyModel = loadDummyModel;
   // window.loadDualDummyModel = loadDualDummyModel;
   window.singleView = singleView;
   // window.dualView = dualView;
+
+  if (isInApp()) {
+    console.log("is in app");
+  } else {
+    loadDummyModel();
+    // loadDualDummyModel();
+  }
 });
 
 declare global {
@@ -173,5 +186,7 @@ declare global {
     loadDummyModel: () => void;
     loadDualDummyModel: () => void;
     updateMetrics: (metric: MetricsType) => void;
+    updateTranslation: (translation: Record<string, string>) => void;
+    _annotationConfig?: AnnotationConfig[];
   }
 }

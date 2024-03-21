@@ -16,10 +16,17 @@ import {
   acceleratedRaycast,
 } from "three-mesh-bvh";
 import { IMeasurementData, IModelTargetMapper } from "./models/base";
+import { AnnotationConfig } from "./models/annotation-config";
 //* Add the extension functions
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
+
+export const initConfig = () => {
+  window._annotationConfig = annotationConfig.map((config) => {
+    return new AnnotationConfig(config);
+  });
+};
 
 export const filterBodyModelFromList = (
   list: THREE.Object3D<THREE.Object3DEventMap>[]
@@ -204,16 +211,28 @@ export function findMeasurementByTitle(
 export const findAnnotationConfig = (annotation: AnnotationModel) => {
   const label = annotation.title ?? "";
 
-  const foundConfig = annotationConfig.find((e) =>
+  const foundConfig = window._annotationConfig?.find((e) =>
     label.toLowerCase().includes(e.name)
   );
   return foundConfig;
 };
 
+export const findAnnotationConfigByKey = (key: string) => {
+  const foundConfig = window._annotationConfig?.find((e) =>
+    key.toLowerCase().includes(e.name)
+  );
+  return foundConfig;
+};
 export const findWaistPosition = (annotations: AnnotationModel[]) => {
   const result = annotations.find((anno) =>
     anno.title?.toLowerCase().startsWith(MODEL_KEYS.WaistKey)
   );
 
   return result;
+};
+
+export const updateTranslation = (translation: Record<string, string>) => {
+  window._annotationConfig?.forEach((config) => {
+    config.updateTranslation(translation);
+  });
 };

@@ -138,3 +138,32 @@ export const createDomNode = (
   div.classList.add(className);
   return div;
 };
+
+// @see https://stackoverflow.com/questions/71459572/not-possible-to-detect-webview-with-javascript-and-user-agent-on-old-android-ver
+const rules = [
+  // If it says it's a webview, let's go with that.
+  "WebView",
+  // iOS webview will be the same as safari but missing "Safari".
+  "(iPhone|iPod|iPad)(?!.*Safari)",
+  // https://developer.chrome.com/docs/multidevice/user-agent/#webview_user_agent
+  "Android.*Version/[0-9].[0-9]",
+  // Also, we should save the wv detected for Lollipop.
+  // Android Lollipop and Above: webview will be the same as native,
+  // but it will contain "wv".
+  "Android.*wv",
+  // Old chrome android webview agent
+  "Linux; U; Android",
+];
+
+export const isInApp = () => {
+  const userAgent: string | undefined =
+    navigator.userAgent || navigator.vendor || (window as any).opera;
+
+  if (userAgent) {
+    const regex = new RegExp(`(${rules.join("|")})`, "ig");
+
+    return !!userAgent.match(regex);
+  }
+
+  return false;
+};
