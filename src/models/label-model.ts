@@ -172,12 +172,20 @@ export class LabelModel {
       label: undefined,
       value: valueStr,
     });
+    updateHTMLLabel(this.tooltips, {
+      label: undefined,
+      value: valueStr,
+    });
   };
 
   updateUI() {
     const foundConfig = findAnnotationConfigByKey(this.key);
     if (foundConfig) {
       updateHTMLLabel(this.label, {
+        label: foundConfig.label,
+      });
+
+      updateHTMLLabel(this.tooltips, {
         label: foundConfig.label,
       });
 
