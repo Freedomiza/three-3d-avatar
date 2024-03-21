@@ -612,7 +612,7 @@ export class ThreeJSHelper {
       // TODO: set value here
       value: formatMeasurement(el.measurement),
       position: offsetPosition,
-      onPointerDown: moveToPart,
+      // onPointerDown: moveToPart,
     });
 
     // Start point

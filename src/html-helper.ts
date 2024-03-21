@@ -22,7 +22,9 @@ export const createHTMLLabel = ({
     <div class="line"> </div>
     <span class="annotation-label-value">${value}</span>
   `;
-  if (onPointerDown) labelDiv.addEventListener("pointerdown", onPointerDown);
+  if (onPointerDown) {
+    labelDiv.addEventListener("pointerdown", onPointerDown);
+  }
 
   return labelDiv;
 };
