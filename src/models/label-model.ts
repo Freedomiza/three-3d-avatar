@@ -1,6 +1,11 @@
 import { computePosition, shift, offset, size } from "@floating-ui/dom";
 import { CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
-import { hideElement, showElement, updateHTMLLabel } from "../html-helper";
+import {
+  hideElement,
+  isElementHidden,
+  showElement,
+  updateHTMLLabel,
+} from "../html-helper";
 import { findAnnotationConfigByKey } from "../model-helper";
 
 export class LabelModel {
@@ -71,54 +76,58 @@ export class LabelModel {
     if (!eyeDiv || !label) return;
     // console.log({ startDiv });
 
-    computePosition(eyeDiv, arrowEl, {
-      middleware: [
-        offset({
-          mainAxis: -16,
-        }),
-        shift({
-          //   mainAxis: false,
-          //   crossAxis: true,
-          padding: { left: padding, right: padding },
-        }),
-        size({
-          apply({ availableWidth, availableHeight, elements }) {
-            Object.assign(elements.floating.style, {
-              maxWidth: `${availableWidth - padding}px`,
-              maxHeight: `${availableHeight}px`,
-            });
-          },
-        }),
-      ],
-      placement: placement === "right" ? "right" : "left",
-      strategy: "absolute",
-    }).then(({ x, y }) => {
-      Object.assign(arrowEl.style, {
-        left: `${x}px`,
-        top: `${y}px`,
+    if (!isElementHidden(eyeDiv)) {
+      computePosition(eyeDiv, arrowEl, {
+        middleware: [
+          offset({
+            mainAxis: -16,
+          }),
+          shift({
+            //   mainAxis: false,
+            //   crossAxis: true,
+            padding: { left: padding, right: padding },
+          }),
+          size({
+            apply({ availableWidth, availableHeight, elements }) {
+              Object.assign(elements.floating.style, {
+                maxWidth: `${availableWidth - padding}px`,
+                maxHeight: `${availableHeight}px`,
+              });
+            },
+          }),
+        ],
+        placement: placement === "right" ? "right" : "left",
+        strategy: "absolute",
+      }).then(({ x, y }) => {
+        Object.assign(arrowEl.style, {
+          left: `${x}px`,
+          top: `${y}px`,
+        });
       });
-    });
+    }
 
-    computePosition(eyeDiv, label, {
-      middleware: [
-        offset({
-          mainAxis: window.innerWidth / 2,
-          // crossAxis: 10,
-        }),
-        shift({
-          mainAxis: false,
-          crossAxis: true,
-          padding: 15,
-        }),
-      ],
-      placement: placement === "right" ? "right" : "left",
-      strategy: "absolute",
-    }).then(({ x, y }) => {
-      Object.assign(label.style, {
-        left: `${x}px`,
-        top: `${y}px`,
+    if (!isElementHidden(eyeDiv)) {
+      computePosition(eyeDiv, label, {
+        middleware: [
+          offset({
+            mainAxis: window.innerWidth / 2,
+            // crossAxis: 10,
+          }),
+          shift({
+            mainAxis: false,
+            crossAxis: true,
+            padding: 15,
+          }),
+        ],
+        placement: placement === "right" ? "right" : "left",
+        strategy: "absolute",
+      }).then(({ x, y }) => {
+        Object.assign(label.style, {
+          left: `${x}px`,
+          top: `${y}px`,
+        });
       });
-    });
+    }
 
     computePosition(eyeDiv, tooltips, {
       middleware: [

@@ -142,6 +142,10 @@ export const getMeasurementUnit = (unit: MetricsType): string => {
   }
 };
 
+export const isElementHidden = (element: HTMLElement) => {
+  return element.classList.contains(HIDDEN_CSS_CLASS);
+};
+
 export const hideElement = (element?: HTMLElement) => {
   if (element) element.classList.add(HIDDEN_CSS_CLASS);
 };
