@@ -611,36 +611,36 @@ export class ThreeJSHelper {
     const targetPos = el.targetPosition ?? position;
     if (foundConfig?.indicator) {
       let interp = {
-        [`${foundConfig.indicator}`]: 0,
+        [`${foundConfig.indicator}`]: 1,
       };
-      updateMorphTargets(
-        {
-          ...this._morphs!,
-          ...interp,
-        },
-        {
-          // bodyModel: this.bodyModel,
-          indicator: this.bodyIndicator,
-        }
-      );
-
-      // gsap.to(interp, {
-      //   [`${foundConfig.indicator}`]: 0,
-      //   duration: 1, // 1-second duration
-      //   onUpdate: () => {
-      //     updateMorphTargets(
-      //       {
-      //         ...this._morphs!,
-      //         ...interp,
-      //       },
-      //       {
-      //         // bodyModel: this.bodyModel,
-
-      //         indicator: this.bodyIndicator,
-      //       }
-      //     );
+      // updateMorphTargets(
+      //   {
+      //     ...this._morphs!,
+      //     ...interp,
       //   },
-      // });
+      //   {
+      //     // bodyModel: this.bodyModel,
+      //     indicator: this.bodyIndicator,
+      //   }
+      // );
+
+      gsap.to(interp, {
+        [`${foundConfig.indicator}`]: 0,
+        duration: ANIMATION_DURATION, // 1-second duration
+        onUpdate: () => {
+          updateMorphTargets(
+            {
+              ...this._morphs!,
+              ...interp,
+            },
+            {
+              // bodyModel: this.bodyModel,
+
+              indicator: this.bodyIndicator,
+            }
+          );
+        },
+      });
     }
 
     this.moveCamera(cameraPos, targetPos, () => {

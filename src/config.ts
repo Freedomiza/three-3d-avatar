@@ -37,8 +37,8 @@ export const CAMERA_CONFIG = {
   hideLabelDistance: 3.0,
   rotationLock: {
     vertical: {
-      min: Math.PI / 4, //-Math.PI / 4,
-      max: Math.PI / 2,
+      min: Math.PI * 0.33, //-Math.PI / 4,
+      max: Math.PI * 0.66,
     },
     horizontal: {
       min: 0,

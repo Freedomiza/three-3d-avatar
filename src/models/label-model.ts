@@ -132,7 +132,8 @@ export class LabelModel {
     computePosition(eyeDiv, tooltips, {
       middleware: [
         offset({
-          crossAxis: 5,
+          // mainAxis: -10,
+          crossAxis: 10,
         }),
         // shift({
         //   mainAxis: false,

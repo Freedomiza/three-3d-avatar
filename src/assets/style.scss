@@ -3,7 +3,7 @@
   --grey-light: #14142b32;
   --grey-dark: #14142b64;
   --secondary: #555580;
-  --fontSize: 12px;
+  --fontSize: 14px;
 }
 body {
   font-family: "Inter", sans-serif;
@@ -28,7 +28,7 @@ body {
   flex-direction: column;
   justify-content: center;
   // position: relative;
-  padding: 1em 0 1em 0;
+  // padding: 1em 0 1em 0;
   // width: 120px;
   height: 50px;
   color: var(--secondary);
