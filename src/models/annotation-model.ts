@@ -42,6 +42,15 @@ export class AnnotationModel extends BaseModel {
   showLabel = () => {
     this.label?.show();
   };
+
+  hideToolTip = () => {
+    this.label?.hideTooltip();
+  };
+
+  showToolTip = () => {
+    this.label?.showTooltip();
+  };
+
   showEye = () => {
     this.label?.toggleEye(true);
   };
@@ -100,6 +109,10 @@ export class AnnotationModel extends BaseModel {
   showTooltips = () => {
     console.log("show Tooltips:" + this.title);
     postJSMessage("AnnotationChannel", this.title);
+
+    if (!this.position) return;
+
+    this.label?.showTooltip();
   };
 
   updateLabelMeasurement = (measurement: IMeasurementData) => {

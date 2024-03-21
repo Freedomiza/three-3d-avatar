@@ -20,6 +20,7 @@ import {
   createDomNode,
   createHTMLEyeBox,
   createHTMLLabel,
+  createHTMLTooltips,
   formatMeasurement,
   hideElement,
   showElement,
@@ -539,6 +540,7 @@ export class ThreeJSHelper {
     // this.showAllEyes();
     this.hideAllEyes();
     this.hideAllLabels();
+    this.hideAllToolTips();
     // el.hideEye();
     // el.showTooltips();
 
@@ -614,24 +616,37 @@ export class ThreeJSHelper {
       position: offsetPosition,
       // onPointerDown: moveToPart,
     });
+    const tooltipDiv = createHTMLTooltips({
+      name: foundConfig?.name ?? label,
+      title: foundConfig?.label ?? label,
+      value: formatMeasurement(el.measurement),
+    });
 
     // Start point
-    const startDiv = createHTMLEyeBox(moveToPart);
+    const eyeDiv = createHTMLEyeBox(moveToPart);
 
     //* Draw start point
-    let startObject = new CSS2DObject(startDiv);
-    startObject.position.copy(position);
+    let eye2DObject = new CSS2DObject(eyeDiv);
+    eye2DObject.position.copy(position);
 
-    scene.add(startObject);
+    scene.add(eye2DObject);
 
+    const arrowEl = createDomNode(document, "arrow");
     this._domNode?.appendChild(labelDiv);
+    this._domNode?.appendChild(tooltipDiv);
+    this._domNode?.appendChild(arrowEl);
+
     //* Compute position
     const labelModel = new LabelModel(
       foundConfig?.name ?? label,
       labelDiv,
-      startObject,
+      tooltipDiv,
+      arrowEl,
+      eye2DObject,
+
       offsetPosition
     );
+
     labelModel.updatePosition();
 
     return labelModel;
@@ -643,6 +658,12 @@ export class ThreeJSHelper {
     });
   };
 
+  hideAllToolTips = () => {
+    this.annotationModels.forEach((el) => {
+      el.hideToolTip();
+    });
+  };
+
   showAllLabels: () => void = () => {
     this.annotationModels.forEach((el) => {
       el.showLabel();
@@ -650,6 +671,7 @@ export class ThreeJSHelper {
   };
 
   resetCameraCenter = () => {
+    this.hideAllToolTips();
     const controls = this._controls!;
     const target = new THREE.Vector3(
       INITIAL_CAMERA_TARGET.x,
@@ -677,7 +699,7 @@ export class ThreeJSHelper {
 
   resetView: () => void = () => {
     this._renderMode = RenderMode.FullBody;
-
+    this.hideAllToolTips();
     this.showAllEyes();
     this.showAllLabels();
 

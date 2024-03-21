@@ -16,17 +16,6 @@ export const INITIAL_CAMERA_TARGET = {
   z: 0,
 };
 
-// export const INITIAL_CAMERA_ROTATION_LOCK = {
-//   vertical: {
-//     min: -Math.PI / 4,
-//     max: Math.PI / 2,
-//   },
-//   horizontal: {
-//     min: 0,
-//     max: Math.PI,
-//   },
-// };
-
 export const LINE_COLOR = 0xff0283;
 
 export const MODEL_KEYS = {

@@ -29,6 +29,26 @@ export const createHTMLLabel = ({
   return labelDiv;
 };
 
+export const createHTMLTooltips = ({
+  name,
+  title,
+  value,
+}: {
+  name: string;
+  title: string;
+  value: string;
+}) => {
+  const tooltipDiv = document.createElement("div");
+  tooltipDiv.setAttribute("data-name", name);
+
+  tooltipDiv.className = "annotation-tooltip";
+  tooltipDiv.innerHTML = `
+  <span class="annotation-label-title">${title}</span>  
+  <span class="annotation-label-value">${value}</span>
+`;
+  return tooltipDiv;
+};
+
 export const createHTMLEyeBox = (onPointerDown?: () => void) => {
   const element = document.createElement("div");
   element.className = "annotation-label-arrow";

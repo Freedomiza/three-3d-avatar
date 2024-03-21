@@ -17,7 +17,7 @@ import { AnnotationConfig } from "./models/annotation-config";
 document.addEventListener("DOMContentLoaded", async () => {
   initConfig();
   const singleView: ThreeJSHelper = new ThreeJSHelper();
-  // const dualView: DualModelHelper = new DualModelHelper();
+  const dualView: DualModelHelper = new DualModelHelper();
 
   const onLoadModelCompeted = () => {
     callFlutterHandler("onModelLoaded");
@@ -28,19 +28,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   window.addEventListener("resize", singleView.onWindowResize);
 
-  // window.loadDualModel = async (isMale, h1, param1, h2, param2) => {
-  //   await dualView.init(document);
-  //   setTimeout(() => {
-  //     dualView.loadDualModel(
-  //       isMale,
-  //       param1,
-  //       param2,
-  //       modelData,
-  //       onLoadModelCompeted,
-  //       onLoadModelError
-  //     );
-  //   }, 500);
-  // };
+  window.loadDualModel = async (isMale, param1, param2) => {
+    await dualView.init(document);
+    setTimeout(() => {
+      dualView.loadDualModel(
+        isMale,
+        param1,
+        param2,
+        modelData,
+        onLoadModelCompeted,
+        onLoadModelError
+      );
+    }, 200);
+  };
 
   window.loadModel = async (
     isMale: boolean,
@@ -107,17 +107,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const resetAll = () => {
     singleView.unloadModel();
-    // dualView.unloadModel();
+    dualView.unloadModel();
   };
-  // const loadDualDummyModel = async () => {
-  //   resetAll();
-  //   await dualView.init(document);
-  //   const param1 = structuredClone(testParams);
-  //   const param2 = structuredClone(param1);
-  //   param2.kneeHeight = 1;
-  //   param2.insideLegToKnee = 2;
-  //   dualView.loadDualModel(true, param1, param2, modelData);
-  // };
+
+  const loadDualDummyModel = async () => {
+    resetAll();
+    await dualView.init(document);
+    const param1 = structuredClone(testParams);
+    const param2 = structuredClone(param1);
+    param2.kneeHeight = 1;
+    param2.insideLegToKnee = 2;
+    dualView.loadDualModel(true, param1, param2, modelData);
+  };
 
   const loadDummyModel = async () => {
     resetAll();
@@ -145,10 +146,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   window.loadDummyModel = loadDummyModel;
-  // window.loadDualDummyModel = loadDualDummyModel;
+  window.loadDualDummyModel = loadDualDummyModel;
   window.singleView = singleView;
-  // window.dualView = dualView;
-
+  window.dualView = dualView;
+  window.resetAll = resetAll;
   if (isInApp()) {
     console.log("is in app");
   } else {
@@ -176,9 +177,7 @@ declare global {
     resetAll: () => void;
     loadDualModel: (
       isMale: boolean,
-      height1: number,
       params1: IModelTargetMapper,
-      height2: number,
       params2: IModelTargetMapper
     ) => void;
     singleView: ThreeJSHelper;

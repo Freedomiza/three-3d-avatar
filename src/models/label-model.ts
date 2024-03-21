@@ -1,11 +1,6 @@
 import { computePosition, shift, offset, size } from "@floating-ui/dom";
 import { CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
-import {
-  createDomNode,
-  hideElement,
-  showElement,
-  updateHTMLLabel,
-} from "../html-helper";
+import { hideElement, showElement, updateHTMLLabel } from "../html-helper";
 import { findAnnotationConfigByKey } from "../model-helper";
 
 export class LabelModel {
@@ -13,22 +8,27 @@ export class LabelModel {
   padding: number = 15;
   eyeSprite: CSS2DObject;
   label: HTMLDivElement;
+  tooltips: HTMLDivElement;
   arrowEl: HTMLDivElement;
 
   placement: string = "right";
   isVisible = true;
+  tooltipVisible = false;
 
   constructor(
     key: string,
     label: HTMLDivElement,
+    tooltips: HTMLDivElement,
+    arrowEl: HTMLDivElement,
     eyeSprite: CSS2DObject,
     placement: string
   ) {
     this.key = key;
     this.label = label;
-
-    this.arrowEl = createDomNode(document, "arrow");
-    document.body.appendChild(this.arrowEl);
+    this.tooltips = tooltips;
+    hideElement(tooltips);
+    this.arrowEl = arrowEl;
+    // document.body.appendChild(this.arrowEl);
 
     this.eyeSprite = eyeSprite;
     this.placement = placement;
@@ -38,28 +38,40 @@ export class LabelModel {
     this.eyeSprite.remove();
     this.label.remove();
     this.arrowEl.remove();
+    this.tooltips.remove();
+  };
+
+  showTooltip = () => {
+    this.tooltipVisible = true;
+    showElement(this.tooltips);
+    this.updatePosition();
+  };
+
+  hideTooltip = () => {
+    this.tooltipVisible = false;
+    hideElement(this.tooltips);
+    this.updatePosition();
   };
 
   updatePosition = () => {
-    const startDiv = this.eyeSprite.element;
-    const tooltips = this.label;
+    const eyeDiv = this.eyeSprite.element;
+    const label = this.label;
     const arrowEl = this.arrowEl;
     const padding = this.padding;
     const placement = this.placement;
+    const tooltips = this.tooltips;
+
+    // if (this.tooltipVisible && this.isVisible) {
+    //   showElement(tooltips);
+    // } else {
+    //   hideElement(tooltips);
+    // }
     // console.log("re-render");
 
-    if (!startDiv || !tooltips) return;
+    if (!eyeDiv || !label) return;
     // console.log({ startDiv });
-    // if (
-    //   tooltips.classList.contains("hidden") ||
-    //   arrowEl.classList.contains("hidden")
-    // ) {
-    //   console.log("element hidden");
-    //   // console.log(startDiv);
-    //   return;
-    // }
 
-    computePosition(startDiv, arrowEl, {
+    computePosition(eyeDiv, arrowEl, {
       middleware: [
         offset({
           mainAxis: -16,
@@ -87,7 +99,7 @@ export class LabelModel {
       });
     });
 
-    computePosition(startDiv, tooltips, {
+    computePosition(eyeDiv, label, {
       middleware: [
         offset({
           mainAxis: window.innerWidth / 2,
@@ -100,6 +112,26 @@ export class LabelModel {
         }),
       ],
       placement: placement === "right" ? "right" : "left",
+      strategy: "absolute",
+    }).then(({ x, y }) => {
+      Object.assign(label.style, {
+        left: `${x}px`,
+        top: `${y}px`,
+      });
+    });
+
+    computePosition(eyeDiv, tooltips, {
+      middleware: [
+        offset({
+          crossAxis: 10,
+        }),
+        // shift({
+        //   mainAxis: false,
+        //   crossAxis: true,
+        //   padding: 15,
+        // }),
+      ],
+      placement: "top",
       strategy: "absolute",
     }).then(({ x, y }) => {
       Object.assign(tooltips.style, {
@@ -131,7 +163,8 @@ export class LabelModel {
   };
 
   toggleEye = (value: boolean) => {
-    this.eyeSprite.visible = value;
+    // this.eyeSprite.visible = value;
+    this.eyeSprite.element.style.opacity = (value ? 1 : 0).toString();
   };
 
   updateValue = (valueStr: string) => {

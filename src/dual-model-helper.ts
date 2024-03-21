@@ -5,9 +5,10 @@ import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 import {
-  INITIAL_CAMERA_ROTATION_LOCK,
+  // INITIAL_CAMERA_ROTATION_LOCK,
   INITIAL_CAMERA_TARGET,
   INITIAL_DUAL_CAMERA_POSITION,
+  CAMERA_CONFIG,
 } from "./config";
 import BodyModel from "./models/body-model";
 import { IModelTargetMapper } from "./models/base";
@@ -148,10 +149,10 @@ export class DualModelHelper {
   private setUpCamera = () => {
     const halfWidth = window.innerWidth / 2;
     let camera = new THREE.PerspectiveCamera(
-      55,
+      CAMERA_CONFIG.fov,
       halfWidth / window.innerHeight,
-      0.1,
-      20
+      CAMERA_CONFIG.near,
+      CAMERA_CONFIG.far
     );
 
     return camera;
@@ -209,8 +210,8 @@ export class DualModelHelper {
     controls.minDistance = 1;
     controls.maxDistance = 3.5;
 
-    controls.minPolarAngle = INITIAL_CAMERA_ROTATION_LOCK.vertical.min;
-    controls.maxPolarAngle = INITIAL_CAMERA_ROTATION_LOCK.vertical.max;
+    controls.minPolarAngle = CAMERA_CONFIG.rotationLock.vertical.min;
+    controls.maxPolarAngle = CAMERA_CONFIG.rotationLock.vertical.max;
 
     // controls.minAzimuthAngle = INITIAL_CAMERA_ROTATION_LOCK.horizontal.min;
     // controls.maxAzimuthAngle = INITIAL_CAMERA_ROTATION_LOCK.horizontal.max;
