@@ -11,6 +11,7 @@ import {
 import {
   IMeasurementData,
   IModelTargetMapper,
+  ITimelineData,
   MetricsType,
 } from "./models/base";
 import BodyModel from "./models/body-model";
@@ -177,7 +178,7 @@ export class ThreeJSHelper {
     if (this._isMovingId) {
       clearTimeout(this._isMovingId);
     } else {
-      this.hideAllLabels();
+      // this.hideAllLabels();
       this._startZoom = this._camera.position.distanceTo(
         this.getCenterTarget()
       );
@@ -189,7 +190,7 @@ export class ThreeJSHelper {
       this.checkLabelShouldVisible();
       this._startZoom = undefined;
       this.render();
-    }, 300);
+    }, 10);
   };
 
   checkLabelShouldVisible = () => {
@@ -334,7 +335,7 @@ export class ThreeJSHelper {
     params: IModelTargetMapper,
     measurement: IMeasurementData[] = []
   ) => {
-    this._morphs = params;
+    this._morphs = this._selectedClone(params);
 
     updateMorphTargets(params, {
       bodyModel: this._bodyModel,
@@ -343,6 +344,62 @@ export class ThreeJSHelper {
     });
 
     this.updateMeasurements(measurement);
+  };
+
+  _selectedClone = (params: IModelTargetMapper) => {
+    return {
+      muscular: params.muscular,
+      bodyFat: params.bodyFat,
+      skinny: params.skinny,
+      neckGirth: params.neckGirth,
+      neckBaseGirth: params.neckBaseGirth,
+      acrossBackShoulderWidth: params.acrossBackShoulderWidth,
+
+      breastSize: params.breastSize,
+      underBustGirth: params.underBustGirth,
+      waistGirth: params.waistGirth,
+      bellyWaistGirth: params.bellyWaistGirth,
+      topHipGirth: params.topHipGirth,
+      hipGirth: params.hipGirth,
+      thighGirthR: params.thighGirthR,
+      midThighGirthR: params.midThighGirthR,
+      kneeGirthR: params.kneeGirthR,
+      calfGirthR: params.calfGirthR,
+      upperArmGirthR: params.upperArmGirthR,
+      forearmGirthR: params.forearmGirthR,
+      wristGirthR: params.wristGirthR,
+      shoulderToElbowR: params.shoulderToElbowR,
+      forearmLength: params.forearmLength,
+      topToBackNeck: params.topToBackNeck,
+      backNeckToBust: params.backNeckToBust,
+      bustToWaist: params.bustToWaist,
+      waistToBellyWaist: params.waistToBellyWaist,
+      bellyWaistToTopHip: params.bellyWaistToTopHip,
+      topHipToHip: params.topHipToHip,
+      hipToInsideLeg: params.hipToInsideLeg,
+      insideLegToKnee: params.insideLegToKnee,
+      kneeHeight: params.kneeHeight,
+      outerAnkleHeightR: params.outerAnkleHeightR,
+      male: params.male,
+      female: params.female,
+
+      neckIndicatorDisable: params.neckIndicatorDisable,
+      shoulderIndicatorDisable: params.shoulderIndicatorDisable,
+      backLengthIndicatorDisable: params.backLengthIndicatorDisable,
+      bustIndicatorDisable: params.bustIndicatorDisable,
+      underBustIndicatorDisable: params.underBustIndicatorDisable,
+      waistIndicatorDisable: params.waistIndicatorDisable,
+      hipIndicatorDisable: params.hipIndicatorDisable,
+      thighIndicatorDisable: params.thighIndicatorDisable,
+      calfIndicatorDisable: params.calfIndicatorDisable,
+      upperArmIndicatorDisable: params.upperArmIndicatorDisable,
+      foreArmIndicatorDisable: params.foreArmIndicatorDisable,
+      outerArmLengthIndicatorDisable: params.outerArmLengthIndicatorDisable,
+      sleeveLengthIndicatorDisable: params.sleeveLengthIndicatorDisable,
+      insideLegHeightIndicatorDisable: params.insideLegHeightIndicatorDisable,
+      outsideLegHeightIndicatorDisable: params.outsideLegHeightIndicatorDisable,
+      backNeckHeightIndicatorDisable: params.backNeckHeightIndicatorDisable,
+    };
   };
 
   unloadModel: () => void = () => {
@@ -811,10 +868,38 @@ export class ThreeJSHelper {
     });
   };
 
-  updateUI() {
+  updateUI = () => {
     this.annotationModels.forEach((el) => {
       el?.updateUI();
     });
-    // this.render();
-  }
+  };
+
+  playTimeline = (timeLines: ITimelineData[], duration: number) => {
+    if (timeLines.length == 0) return;
+    let minTime = timeLines[0].date;
+    let maxTime = timeLines[timeLines.length - 1].date;
+    const timeSpan = Math.abs(maxTime - minTime);
+
+    var tl = gsap.timeline({});
+    const currentMorphs = structuredClone(this._morphs!);
+    let current = minTime;
+    console.log({ currentMorphs });
+    for (let index = 0; index < timeLines.length; index++) {
+      const el = timeLines[index];
+
+      const timeRatio = (el.date - current) / timeSpan;
+
+      console.log({ timeRatio });
+      tl.to(currentMorphs, {
+        duration: timeRatio * duration, // Animation duration in seconds
+        ...el.measurements,
+        onUpdate: () => {
+          this.updateMorphTargets(currentMorphs);
+        },
+      });
+      current = el.date;
+    }
+
+    return tl;
+  };
 }

@@ -59,3 +59,9 @@ export interface IMeasurementData {
 }
 
 export type MetricsType = "cm" | "mm" | "in" | "feet";
+
+export interface ITimelineData {
+  // Time since Epoch
+  date: number;
+  measurements: IModelTargetMapper;
+}
