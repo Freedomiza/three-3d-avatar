@@ -852,9 +852,9 @@ export class ThreeJSHelper {
 
   updateMeasurements = (measurementData: IMeasurementData[]) => {
     if (measurementData.length == 0) return;
-    console.log({
-      measurementData,
-    });
+    // console.log({
+    //   measurementData,
+    // });
 
     this.annotationModels.forEach((el) => {
       const measurement = findMeasurementByTitle(measurementData, el.title);
@@ -874,32 +874,58 @@ export class ThreeJSHelper {
     });
   };
 
+  _timeLinePlayer: gsap.core.Timeline | undefined = undefined;
+
   playTimeline = (timeLines: ITimelineData[], duration: number) => {
     if (timeLines.length == 0) return;
+    this._timeLinePlayer?.kill();
+
     let minTime = timeLines[0].date;
     let maxTime = timeLines[timeLines.length - 1].date;
+
     const timeSpan = Math.abs(maxTime - minTime);
 
     var tl = gsap.timeline({});
     const currentMorphs = structuredClone(this._morphs!);
     let current = minTime;
-    console.log({ currentMorphs });
+    // console.log({ currentMorphs });
     for (let index = 0; index < timeLines.length; index++) {
       const el = timeLines[index];
 
       const timeRatio = (el.date - current) / timeSpan;
 
-      console.log({ timeRatio });
+      // console.log({ timeRatio });
       tl.to(currentMorphs, {
         duration: timeRatio * duration, // Animation duration in seconds
         ...el.measurements,
         onUpdate: () => {
-          this.updateMorphTargets(currentMorphs);
+          updateMorphTargets(currentMorphs, {
+            bodyModel: this._bodyModel,
+            annotationModels: this.annotationModels,
+            indicator: this.bodyIndicator,
+          });
+          this.updateAnnotationOpacity();
+          // this.updateUI();
         },
       });
       current = el.date;
     }
-
+    this._timeLinePlayer = tl;
     return tl;
+  };
+
+  pauseTimeLine = () => {
+    if (this._timeLinePlayer) this._timeLinePlayer.pause();
+  };
+  seekTimeLine = (duration: number) => {
+    return this._timeLinePlayer?.seek(duration);
+  };
+
+  stopTimeLine = () => {
+    return this._timeLinePlayer?.kill();
+  };
+
+  replayTimeLine = () => {
+    return this._timeLinePlayer?.restart();
   };
 }

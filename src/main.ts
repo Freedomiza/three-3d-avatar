@@ -232,6 +232,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     return singleView.playTimeline(timeline, 10);
   };
 
+  // window.playTimeLine = (timeline: ITimelineData[], duration: number = 10) => {
+  //   return singleView.playTimeline(timeline, duration);
+  // };
+
+  // window.pauseTimeLine = () => {
+  //   singleView.pauseTimeLine();
+  // };
+
   if (isInApp()) {
     console.log("is in app");
   } else {
@@ -270,5 +278,7 @@ declare global {
     updateTranslation: (translation: Record<string, string>) => void;
     _annotationConfig?: AnnotationConfig[];
     playDummyTimeline: () => void;
+    // playTimeLine: (timeline: ITimelineData[], duration: number) => void;
+    // pauseTimeLine: () => void;
   }
 }
